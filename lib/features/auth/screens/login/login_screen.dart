@@ -105,11 +105,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FF),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: IgnorePointer(
+              child: Image.asset(
+                'assets/images/bara_naik_pesawat.png',
+                width: 340,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => SvgPicture.asset(
+                  'assets/images/bara_naik_pesawat.png',
+                  width: 340,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                24.0,
+                0,
+                24.0,
+                MediaQuery.viewInsetsOf(context).bottom + 24.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -421,25 +444,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: IgnorePointer(
-                child: Image.asset(
-                  'assets/images/bara_naik_pesawat.png',
-                  width: 340,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => SvgPicture.asset(
-                    'assets/images/bara_naik_pesawat.png',
-                    width: 340,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
