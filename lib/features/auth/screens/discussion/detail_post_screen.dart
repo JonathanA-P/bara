@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bara/core/services/discussion_service.dart';
 
 class DetailPostScreen extends StatefulWidget {
-  const DetailPostScreen({super.key});
+  final Map<String, dynamic>? discussion;
+
+  const DetailPostScreen({
+    super.key,
+    this.discussion,
+  });
 
   @override
   State<DetailPostScreen> createState() => _DetailPostScreenState();
@@ -10,6 +16,26 @@ class DetailPostScreen extends StatefulWidget {
 
 class _DetailPostScreenState extends State<DetailPostScreen> {
   final TextEditingController _commentController = TextEditingController();
+  List<Map<String, dynamic>> _comments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadComments();
+  }
+
+  Future<void> _loadComments() async {
+    final discId = widget.discussion?['id'];
+    if (discId == null) return;
+    try {
+      final list = await DiscussionService().getComments(discId.toString());
+      if (mounted) {
+        setState(() => _comments = list);
+      }
+    } catch (e) {
+      debugPrint('[DetailPostScreen] Comments load error: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -21,6 +47,16 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
   Widget build(BuildContext context) {
     const Color buttonBlue = Color(0xFF5382C1);
     const Color textColorDark = Color(0xFF1E293B);
+
+    final profile = widget.discussion?['profiles'] as Map<String, dynamic>?;
+    final authorName = profile?['full_name'] as String? ?? 'Alex Chen';
+    final userMeta = profile?['major'] as String? ?? 'Computer Science • Year 3';
+    final categoryTag = (widget.discussion?['tag'] as String?)?.toUpperCase() ?? 'ALGORITHM DESIGN';
+    final title = widget.discussion?['title'] as String? ?? 'How do you optimize BFS traversal for large graphs?';
+    final content = widget.discussion?['content'] as String? ??
+        'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there any specific memory or data structure optimizations you\'d recommend?';
+    final likes = (widget.discussion?['likes_count'] ?? 124).toString();
+    final comments = (widget.discussion?['replies_count'] ?? 32).toString();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FF),
@@ -97,7 +133,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          'Alex Chen',
+                                          authorName,
                                           style: GoogleFonts.manrope(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800,
@@ -115,7 +151,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                       ],
                                     ),
                                     Text(
-                                      'Computer Science • Year 3',
+                                      userMeta,
                                       style: GoogleFonts.manrope(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
@@ -138,7 +174,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'ALGORITHM DESIGN',
+                              categoryTag,
                               style: GoogleFonts.manrope(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
@@ -150,7 +186,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
 
                           // Title & Description
                           Text(
-                            'How do you optimize BFS traversal for large graphs?',
+                            title,
                             style: GoogleFonts.manrope(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -159,7 +195,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there any specific memory or data structure optimizations you\'d recommend?',
+                            content,
                             style: GoogleFonts.manrope(
                               fontSize: 12,
                               color: const Color(0xFF64748B),
@@ -185,11 +221,11 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                             children: [
                               const Icon(Icons.favorite_border, size: 16, color: Color(0xFF94A3B8)),
                               const SizedBox(width: 4),
-                              Text('124', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF64748B))),
+                              Text(likes, style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF64748B))),
                               const SizedBox(width: 16),
                               const Icon(Icons.chat_bubble_outline, size: 16, color: Color(0xFF94A3B8)),
                               const SizedBox(width: 4),
-                              Text('32', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF64748B))),
+                              Text(comments, style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF64748B))),
                               const Spacer(),
                               const Icon(Icons.bookmark_border_rounded, size: 18, color: Color(0xFF94A3B8)),
                               const SizedBox(width: 12),
@@ -203,35 +239,55 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                     const SizedBox(height: 20),
 
                     // LIST KOMENTAR
-                    _buildCommentCard(
-                      name: 'Alex Chen',
-                      timeAgo: '2h ago',
-                      meta: 'Computer Science • Year 3',
-                      content:
-                          'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
-                      likes: '124',
-                      comments: '32',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCommentCard(
-                      name: 'Alex Chen',
-                      timeAgo: '2h ago',
-                      meta: 'Computer Science • Year 3',
-                      content:
-                          'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
-                      likes: '124',
-                      comments: '32',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCommentCard(
-                      name: 'Alex Chen',
-                      timeAgo: '1h ago',
-                      meta: 'Computer Science • Year 3',
-                      content:
-                          'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
-                      likes: '124',
-                      comments: '32',
-                    ),
+                    if (_comments.isNotEmpty)
+                      ..._comments.map((c) {
+                        final cProfile = c['profiles'] as Map<String, dynamic>?;
+                        final cAuthor = cProfile?['full_name'] as String? ?? 'Mahasiswa UB';
+                        final cMeta = cProfile?['major'] as String? ?? 'FILKOM UB';
+                        final cText = c['comment_text'] as String? ?? '';
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: _buildCommentCard(
+                            name: cAuthor,
+                            timeAgo: 'Baru saja',
+                            meta: cMeta,
+                            content: cText,
+                            likes: '0',
+                            comments: '0',
+                          ),
+                        );
+                      })
+                    else ...[
+                      _buildCommentCard(
+                        name: 'Alex Chen',
+                        timeAgo: '2h ago',
+                        meta: 'Computer Science • Year 3',
+                        content:
+                            'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
+                        likes: '124',
+                        comments: '32',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCommentCard(
+                        name: 'Alex Chen',
+                        timeAgo: '2h ago',
+                        meta: 'Computer Science • Year 3',
+                        content:
+                            'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
+                        likes: '124',
+                        comments: '32',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCommentCard(
+                        name: 'Alex Chen',
+                        timeAgo: '1h ago',
+                        meta: 'Computer Science • Year 3',
+                        content:
+                            'I\'m working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there',
+                        likes: '124',
+                        comments: '32',
+                      ),
+                    ],
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -281,8 +337,18 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      final text = _commentController.text.trim();
+                      if (text.isEmpty) return;
                       _commentController.clear();
+                      final discId = widget.discussion?['id'];
+                      if (discId != null) {
+                        await DiscussionService().addComment(
+                          discussionId: discId.toString(),
+                          commentText: text,
+                        );
+                        _loadComments();
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonBlue,

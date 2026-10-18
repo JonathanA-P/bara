@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'core/config/app_routes.dart';
 import 'features/auth/screens/splash_screen/splash_screen.dart';
 
-void main() {
+import 'core/services/supabase_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.instance.initialize();
   runApp(const MyApp());
 }
 

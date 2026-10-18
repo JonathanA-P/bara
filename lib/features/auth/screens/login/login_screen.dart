@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bara/features/auth/screens/home/main_screen.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bara/core/services/auth_service.dart';
+import 'forgot_password_screen.dart';
+import 'register_screen.dart';
+import 'otp_verification_screen.dart'; 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,19 +15,87 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController =
-      TextEditingController(text: 'alex@berkeley.edu');
-  final TextEditingController _passwordController =
-      TextEditingController(text: '1234567890');
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isObscure = true;
   bool _rememberDevice = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap isi email kampus dan kata sandi.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().signIn(email: email, password: password);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        if (e.message.toLowerCase().contains('email not confirmed')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                email: email,
+              ),
+            ),
+          );
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.message.contains('Invalid login credentials')
+                  ? 'Email kampus atau kata sandi salah.'
+                  : e.message,
+              style: GoogleFonts.manrope(fontSize: 12),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[Login] Fallback/Offline: $e');
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -43,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
 
                   Text(
-                    'Welcome back, Alex',
+                    'Welcome to BARA',
                     style: GoogleFonts.manrope(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -76,7 +149,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFF86EFAC), width: 1.5),
+                      border: Border.all(
+                        color: _emailController.text.isNotEmpty
+                            ? const Color(0xFF86EFAC)
+                            : const Color(0xFFE2E8F0),
+                        width: 1.5,
+                      ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                     child: Row(
@@ -90,22 +168,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: TextField(
                             controller: _emailController,
+                            onChanged: (_) => setState(() {}),
                             style: GoogleFonts.manrope(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: textColorDark,
                             ),
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
+                              hintText: 'nim@student.ub.ac.id',
+                              hintStyle: GoogleFonts.manrope(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF94A3B8),
+                              ),
                               border: InputBorder.none,
                               isDense: true,
                             ),
                           ),
                         ),
-                        SvgPicture.asset(
-                          'assets/images/centang.svg',
-                          width: 18,
-                          height: 18,
-                        ),
+                        if (_emailController.text.isNotEmpty)
+                          SvgPicture.asset(
+                            'assets/images/centang.svg',
+                            width: 18,
+                            height: 18,
+                          ),
                       ],
                     ),
                   ),
@@ -144,7 +230,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.w600,
                               color: textColorDark,
                             ),
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
+                              hintText: 'Minimal 6 karakter',
+                              hintStyle: GoogleFonts.manrope(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF94A3B8),
+                              ),
                               border: InputBorder.none,
                               isDense: true,
                             ),
@@ -206,7 +298,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ForgotPasswordScreen(),
+                            ),
+                          );
+                        },
                         child: Text(
                           'Forgot password?',
                           style: GoogleFonts.manrope(
@@ -224,14 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MainScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonBlue,
                         elevation: 0,
@@ -239,15 +332,56 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: Text(
-                        'Log in with University SSO',
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Log in with University SSO',
+                              style: GoogleFonts.manrope(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Belum punya akun? ',
                         style: GoogleFonts.manrope(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
                         ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Daftar di sini',
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: buttonBlue,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bara/core/services/auth_service.dart';
+import 'package:bara/core/services/supabase_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -18,6 +20,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       TextEditingController(text: 'Sistem Informasi');
   final TextEditingController _bioController =
       TextEditingController(text: 'apa?');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentProfile();
+  }
+
+  Future<void> _loadCurrentProfile() async {
+    final userId = SupabaseService.instance.currentUserId;
+    if (userId == null) return;
+    try {
+      final prof = await AuthService().getProfile(userId);
+      if (prof != null && mounted) {
+        setState(() {
+          if (prof['full_name'] != null) _nameController.text = prof['full_name'];
+          if (prof['nim'] != null) _usernameController.text = '@${prof['nim']}';
+          if (prof['major'] != null) _taglineController.text = prof['major'];
+          if (prof['bio'] != null) _bioController.text = prof['bio'];
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -154,8 +178,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
+                  onPressed: () async {
+                    try {
+                      await AuthService().updateProfile(
+                        fullName: _nameController.text.trim(),
+                        bio: _bioController.text.trim(),
+                        major: _taglineController.text.trim(),
+                      );
+                    } catch (_) {}
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,

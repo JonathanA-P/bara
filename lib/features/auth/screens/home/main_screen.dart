@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
+import '../bookmark/bookmark_screen.dart';
+import 'package:bara/features/explore/screens/explore_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,8 +18,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Center(child: Text('Explore / Search Screen')),
-    const Center(child: Text('Bookmark Screen')),
+    const ExploreScreen(),
+    const BookmarkScreen(),
     const ProfileScreen(),
   ];
 

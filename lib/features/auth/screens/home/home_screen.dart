@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../discussion/detail_post_screen.dart';
+import '../discussion/add_discussion_screen.dart';
+import 'package:bara/features/notification/screens/notification_screen.dart';
+import 'package:bara/features/chat/screens/chat_list_screen.dart';
+import 'package:bara/core/services/discussion_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +16,39 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedFilterIndex = 0;
   final List<String> _filters = ['For You', 'Live Chat', 'Following', 'Trending'];
+  List<Map<String, dynamic>> _discussions = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDiscussions();
+  }
+
+  Future<void> _loadDiscussions() async {
+    setState(() => _isLoading = true);
+    try {
+      final list = await DiscussionService().getDiscussions(
+        tag: _selectedFilterIndex == 0 ? null : _filters[_selectedFilterIndex],
+      );
+      if (mounted) {
+        setState(() {
+          _discussions = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[HomeScreen] Fetch error: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _openCreateDiscussion() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddDiscussionScreen()),
+    ).then((_) => _loadDiscussions());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +58,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FF),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
+        child: RefreshIndicator(
+          color: buttonBlue,
+          onRefresh: _loadDiscussions,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,11 +90,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.chat_bubble_outline_rounded, color: textColorDark, size: 22),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChatListScreen(),
+                            ),
+                          );
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.notifications_none_rounded, color: textColorDark, size: 22),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -62,57 +117,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 16),
 
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Color(0xFFE2E8F0),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'What would you like to share today?',
-                        style: GoogleFonts.manrope(
-                          fontSize: 11,
-                          color: const Color(0xFF94A3B8),
+              GestureDetector(
+                onTap: _openCreateDiscussion,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Color(0xFFE2E8F0),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'What would you like to share today?',
+                          style: GoogleFonts.manrope(
+                            fontSize: 11,
+                            color: const Color(0xFF94A3B8),
+                          ),
                         ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonBlue,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      ElevatedButton(
+                        onPressed: _openCreateDiscussion,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonBlue,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        'Create',
-                        style: GoogleFonts.manrope(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                        child: Text(
+                          'Create',
+                          style: GoogleFonts.manrope(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
@@ -126,7 +184,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: GestureDetector(
-                        onTap: () => setState(() => _selectedFilterIndex = index),
+                        onTap: () {
+                          setState(() => _selectedFilterIndex = index);
+                          _loadDiscussions();
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
@@ -151,72 +212,113 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    backgroundColor: Colors.transparent,
+                    color: buttonBlue,
+                  ),
+                ),
+
               const SizedBox(height: 20),
 
-              GestureDetector(
-                onTap: () => _navigateToDetail(context),
-                child: _buildPostCard(
-                  authorName: 'Alex Chen',
-                  timeAgo: '2h ago',
-                  userMeta: 'Computer Science • Year 3',
-                  categoryTag: 'ALGORITHM DESIGN',
-                  title: 'How do you optimize BFS traversal for large graphs?',
-                  content:
-                      'I am working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there...',
-                  likes: '124',
-                  comments: '32',
+              if (_discussions.isNotEmpty)
+                ..._discussions.map((d) {
+                  final profile = d['profiles'] as Map<String, dynamic>?;
+                  final authorName = profile?['full_name'] as String? ?? 'Mahasiswa UB';
+                  final userMeta = profile?['major'] as String? ?? 'FILKOM UB';
+                  final tag = (d['tag'] as String?)?.toUpperCase() ?? 'DISKUSI';
+                  final title = d['title'] as String? ?? '';
+                  final content = d['content'] as String? ?? '';
+                  final likes = (d['likes_count'] ?? 0).toString();
+                  final comments = (d['replies_count'] ?? 0).toString();
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: GestureDetector(
+                      onTap: () => _navigateToDetail(context, d),
+                      child: _buildPostCard(
+                        authorName: authorName,
+                        timeAgo: 'Baru saja',
+                        userMeta: userMeta,
+                        categoryTag: tag,
+                        title: title,
+                        content: content,
+                        likes: likes,
+                        comments: comments,
+                      ),
+                    ),
+                  );
+                })
+              else ...[
+                GestureDetector(
+                  onTap: () => _navigateToDetail(context),
+                  child: _buildPostCard(
+                    authorName: 'Alex Chen',
+                    timeAgo: '2h ago',
+                    userMeta: 'Computer Science • Year 3',
+                    categoryTag: 'ALGORITHM DESIGN',
+                    title: 'How do you optimize BFS traversal for large graphs?',
+                    content:
+                        'I am working on a social network analysis project and my current BFS implementation is timing out on graphs with 10M+ nodes. Are there...',
+                    likes: '124',
+                    comments: '32',
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              GestureDetector(
-                onTap: () => _navigateToDetail(context),
-                child: _buildPostCardWithFile(
-                  authorName: 'Elena Rostova',
-                  timeAgo: '5h ago',
-                  userMeta: 'Top Mentor • 12k Contributions',
-                  title: 'Graph Traversal Cheat Sheet',
-                  fileName: 'Traversal_Algorithms_v2.pdf',
-                  fileSize: '2.4 MB • 4 PAGES',
-                  likes: '342',
-                  comments: '89',
+                GestureDetector(
+                  onTap: () => _navigateToDetail(context),
+                  child: _buildPostCardWithFile(
+                    authorName: 'Elena Rostova',
+                    timeAgo: '5h ago',
+                    userMeta: 'Top Mentor • 12k Contributions',
+                    title: 'Graph Traversal Cheat Sheet',
+                    fileName: 'Traversal_Algorithms_v2.pdf',
+                    fileSize: '2.4 MB • 4 PAGES',
+                    likes: '342',
+                    comments: '89',
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              GestureDetector(
-                onTap: () => _navigateToDetail(context),
-                child: _buildPostCardWithImage(
-                  authorName: 'Alex Chen',
-                  timeAgo: '2h ago',
-                  userMeta: 'Computer Science • Year 3',
-                  categoryTag: 'ALGORITHM DESIGN',
-                  title: 'How do you optimize BFS traversal for large graphs?',
-                  content:
-                      'I am working on a social network analysis project and my current BFS implementation is timing out...',
-                  imagePath: 'assets/images/CloudArt_margin.png',
-                  likes: '124',
-                  comments: '32',
+                GestureDetector(
+                  onTap: () => _navigateToDetail(context),
+                  child: _buildPostCardWithImage(
+                    authorName: 'Alex Chen',
+                    timeAgo: '2h ago',
+                    userMeta: 'Computer Science • Year 3',
+                    categoryTag: 'ALGORITHM DESIGN',
+                    title: 'How do you optimize BFS traversal for large graphs?',
+                    content:
+                        'I am working on a social network analysis project and my current BFS implementation is timing out...',
+                    imagePath: 'assets/images/CloudArt_margin.png',
+                    likes: '124',
+                    comments: '32',
+                  ),
                 ),
-              ),
+              ],
 
               const SizedBox(height: 120), 
             ],
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
-  void _navigateToDetail(BuildContext context) {
+  void _navigateToDetail(BuildContext context, [Map<String, dynamic>? discussion]) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const DetailPostScreen(),
+        builder: (context) => DetailPostScreen(discussion: discussion),
       ),
-    );
+    ).then((_) => _loadDiscussions());
   }
 
   Widget _buildPostCard({

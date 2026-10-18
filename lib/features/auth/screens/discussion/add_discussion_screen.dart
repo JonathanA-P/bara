@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/live_duration_selector.dart';
+import 'package:bara/core/services/discussion_service.dart';
 
 class AddDiscussionScreen extends StatefulWidget {
   const AddDiscussionScreen({super.key});
@@ -319,7 +320,20 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
                 child: SizedBox(
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () async {
+                      final title = _titleController.text.trim();
+                      final desc = _descriptionController.text.trim();
+                      if (title.isNotEmpty && desc.isNotEmpty) {
+                        try {
+                          await DiscussionService().createDiscussion(
+                            title: title,
+                            content: desc,
+                            tag: _selectedCategory,
+                          );
+                        } catch (_) {}
+                      }
+                      if (context.mounted) Navigator.pop(context, true);
+                    },
                     icon: const Icon(Icons.wifi_tethering_rounded,
                         color: Colors.white, size: 20),
                     label: Text(

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'edit_profile_screen.dart';
+import 'package:bara/features/notification/screens/notification_screen.dart';
+import 'package:bara/features/report/screens/report_incident_screen.dart';
+import 'package:bara/features/auth/screens/login/login_screen.dart';
+import 'package:bara/core/services/auth_service.dart';
+import 'package:bara/core/services/supabase_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool? isStranger; 
@@ -16,6 +21,26 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedTabIndex = 0;
+  Map<String, dynamic>? _userProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final userId = SupabaseService.instance.currentUserId;
+    if (userId == null) return;
+    try {
+      final prof = await AuthService().getProfile(userId);
+      if (prof != null && mounted) {
+        setState(() => _userProfile = prof);
+      }
+    } catch (e) {
+      debugPrint('[ProfileScreen] Load profile error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +52,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FF),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
+        child: RefreshIndicator(
+          color: buttonBlue,
+          onRefresh: _loadProfile,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
@@ -62,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               MaterialPageRoute(
                                 builder: (context) => const EditProfileScreen(),
                               ),
-                            );
+                            ).then((_) => _loadProfile());
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: buttonBlue, width: 1.5),
@@ -114,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Aleca Cantika',
+                          _userProfile?['full_name'] as String? ?? 'Aleca Cantika',
                           style: GoogleFonts.manrope(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -122,7 +151,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         Text(
-                          '@aleciacentil_',
+                          _userProfile != null
+                              ? '@${_userProfile!['nim'] ?? _userProfile!['role'] ?? 'user'}'
+                              : '@aleciacentil_',
                           style: GoogleFonts.manrope(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -133,26 +164,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: buttonBlue,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  if (isStranger)
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonBlue,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 8),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 8),
-                    ),
-                    child: Text(
-                      'Follow',
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                      child: Text(
+                        'Follow',
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(width: 8),
                   Container(
                     decoration: const BoxDecoration(
@@ -160,7 +192,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.notifications_none_rounded,
                           size: 20, color: Color(0xFF64748B)),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
@@ -172,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.settings_outlined,
                             size: 20, color: Color(0xFF64748B)),
-                        onPressed: () {},
+                        onPressed: () => _showSettingsSheet(context),
                       ),
                     ),
                   ],
@@ -187,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       size: 16, color: Color(0xFF64748B)),
                   const SizedBox(width: 6),
                   Text(
-                    'Sistem Informasi',
+                    _userProfile?['major'] as String? ?? 'Sistem Informasi',
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -198,7 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Hai seperti sunshine, aku akan membantumu lebih melek bisnis. Yukk mutualan!',
+                _userProfile?['bio'] as String? ??
+                    'Hai seperti sunshine, aku akan membantumu lebih melek bisnis. Yukk mutualan!',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   color: const Color(0xFF475569),
@@ -224,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                  color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -283,6 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -317,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 4,
                         offset: const Offset(0, 2))
                   ]
@@ -352,7 +393,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2))
         ],
@@ -407,6 +448,230 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pengaturan Akun',
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEFF6FF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit_outlined,
+                      color: Color(0xFF2563EB), size: 20),
+                ),
+                title: Text(
+                  'Edit Profil',
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: Color(0xFF94A3B8)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditProfileScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.flag_outlined,
+                      color: Color(0xFFDC2626), size: 20),
+                ),
+                title: Text(
+                  'Laporkan Insiden / Masalah',
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: Color(0xFF94A3B8)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ReportIncidentScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.logout_rounded,
+                      color: Color(0xFF64748B), size: 20),
+                ),
+                title: Text(
+                  'Keluar Akun',
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFEF4444),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showLogoutDialog(context);
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEF2F2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFEF4444),
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Keluar dari BARA?',
+              style: GoogleFonts.manrope(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Anda harus login kembali menggunakan akun SSO Universitas Brawijaya untuk mengakses materi.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Batal',
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await AuthService().signOut();
+                      } catch (_) {}
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Keluar',
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
