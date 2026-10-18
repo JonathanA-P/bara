@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: textColorDark,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'nim@student.ub.ac.id',
+                              hintText: 'username@ub.ac.id',
                               hintStyle: GoogleFonts.manrope(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,

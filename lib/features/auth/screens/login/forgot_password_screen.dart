@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Masukkan email resmi kampus (@student.ub.ac.id) Anda. Kami akan mengirimkan tautan verifikasi untuk membuat kata sandi baru.',
+            'Masukkan email resmi kampus (@ub.ac.id) Anda. Kami akan mengirimkan tautan verifikasi untuk membuat kata sandi baru.',
             style: GoogleFonts.manrope(
               fontSize: 13,
               color: const Color(0xFF64748B),
@@ -132,7 +132,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             },
             style: GoogleFonts.manrope(fontSize: 13),
             decoration: InputDecoration(
-              hintText: 'nama@student.ub.ac.id',
+              hintText: 'username@ub.ac.id',
               hintStyle: GoogleFonts.manrope(
                 fontSize: 12,
                 color: const Color(0xFF94A3B8),

@@ -272,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Email Kampus UB
-                _buildFieldLabel('Email Kampus (@student.ub.ac.id)', textColorDark),
+                _buildFieldLabel('Email Kampus (@ub.ac.id)', textColorDark),
                 const SizedBox(height: 6),
                 TextFormField(
                   controller: _emailController,
@@ -281,13 +281,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (val == null || val.trim().isEmpty) {
                       return 'Email kampus wajib diisi';
                     }
-                    if (!val.endsWith('@student.ub.ac.id')) {
-                      return 'Gunakan email @student.ub.ac.id';
+                    if (!val.endsWith('ub.ac.id')) {
+                      return 'Gunakan email kampus resmi UB (@ub.ac.id)';
                     }
                     return null;
                   },
                   style: GoogleFonts.manrope(fontSize: 13),
-                  decoration: _buildInputDecoration('nim@student.ub.ac.id', Icons.email_outlined),
+                  decoration: _buildInputDecoration('username@ub.ac.id', Icons.email_outlined),
                 ),
 
                 const SizedBox(height: 16),
