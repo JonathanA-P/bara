@@ -72,7 +72,7 @@ class _LiveDurationSelectorState extends State<LiveDurationSelector> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? activeColor.withOpacity(0.08) : Colors.white,
+            color: isSelected ? activeColor.withValues(alpha: 0.08) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected ? activeColor : const Color(0xFFE2E8F0),

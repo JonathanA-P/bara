@@ -3,8 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
-import '../bookmark/bookmark_screen.dart';
-import 'package:bara/features/explore/screens/explore_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,105 +16,153 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const ExploreScreen(),
-    const BookmarkScreen(),
+    const Center(child: Text('Explore / Search Screen')),
+    const Center(child: Text('Perpustakaan / Bookmark Screen')),
+    const AddDiscussionScreen(),
     const ProfileScreen(),
   ];
 
-  void _openAddDiscussionModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const AddDiscussionScreen(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    const Color activeBlue = Color(0xFF5382C1);
+    const Color activeBlue = Color(0xFF4C7BB8);
     const Color inactiveGrey = Color(0xFF94A3B8);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FF),
+      backgroundColor: const Color(0xFFF8FAFC),
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+          child: Container(
+            height: 62,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                // 1. Home
+                _buildNavItem(
+                  index: 0,
+                  activeIcon: Icons.home_rounded,
+                  inactiveIcon: Icons.home_outlined,
+                  activeColor: activeBlue,
+                  inactiveColor: inactiveGrey,
+                ),
 
-      bottomNavigationBar: Stack(
-        alignment: Alignment.topCenter,
-        clipBehavior: Clip.none,
-        children: [
-          BottomAppBar(
-            shape: const CircularNotchedRectangle(),
-            notchMargin: 8,
-            elevation: 10,
-            color: Colors.white,
-            child: SizedBox(
-              height: 60,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  IconButton(
-                    onPressed: () => setState(() => _currentIndex = 0),
-                    icon: SvgPicture.asset(
-                      'assets/images/home.svg',
-                      width: 24,
-                      height: 24,
-                      colorFilter: ColorFilter.mode(
-                        _currentIndex == 0 ? activeBlue : inactiveGrey,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => setState(() => _currentIndex = 1),
-                    icon: Icon(
-                      Icons.explore_outlined,
-                      size: 26,
-                      color: _currentIndex == 1 ? activeBlue : inactiveGrey,
-                    ),
-                  ),
-                  const SizedBox(width: 50),
-                  IconButton(
-                    onPressed: () => setState(() => _currentIndex = 2),
-                    icon: SvgPicture.asset(
+                // 2. Explore
+                _buildNavItem(
+                  index: 1,
+                  activeIcon: Icons.explore_rounded,
+                  inactiveIcon: Icons.explore_outlined,
+                  activeColor: activeBlue,
+                  inactiveColor: inactiveGrey,
+                ),
+
+                // 3. Books / Library (Bookmark)
+                GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 2),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: SvgPicture.asset(
                       'assets/images/bookmark.svg',
-                      width: 24,
-                      height: 24,
+                      width: 22,
+                      height: 22,
                       colorFilter: ColorFilter.mode(
                         _currentIndex == 2 ? activeBlue : inactiveGrey,
                         BlendMode.srcIn,
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => setState(() => _currentIndex = 3),
-                    icon: Icon(
-                      Icons.person_rounded,
-                      size: 26,
-                      color: _currentIndex == 3 ? activeBlue : inactiveGrey,
+                ),
+
+                // 4. Chat / Discussion with badge dot
+                GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 3),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Image.asset(
+                          'assets/images/chatbar.png',
+                          width: 22,
+                          height: 22,
+                          color: _currentIndex == 3 ? activeBlue : inactiveGrey,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            _currentIndex == 3
+                                ? Icons.chat_bubble_rounded
+                                : Icons.chat_bubble_outline_rounded,
+                            size: 24,
+                            color: _currentIndex == 3 ? activeBlue : inactiveGrey,
+                          ),
+                        ),
+                        Positioned(
+                          top: -2,
+                          right: -3,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF59E0B),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
 
-          Positioned(
-            top: -26, 
-            child: GestureDetector(
-              onTap: _openAddDiscussionModal,
-              child: Image.asset(
-                'assets/images/ai_button.png', 
-                width: 130,  
-                height: 130,
-                fit: BoxFit.contain,
-              ),
+                // 5. Profile
+                _buildNavItem(
+                  index: 4,
+                  activeIcon: Icons.person_rounded,
+                  inactiveIcon: Icons.person_outline_rounded,
+                  activeColor: activeBlue,
+                  inactiveColor: inactiveGrey,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData activeIcon,
+    required IconData inactiveIcon,
+    required Color activeColor,
+    required Color inactiveColor,
+  }) {
+    final bool isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          isSelected ? activeIcon : inactiveIcon,
+          size: 25,
+          color: isSelected ? activeColor : inactiveColor,
+        ),
       ),
     );
   }
