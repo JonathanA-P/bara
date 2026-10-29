@@ -14,13 +14,21 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const Center(child: Text('Explore / Search Screen')),
-    const Center(child: Text('Perpustakaan / Bookmark Screen')),
-    const AddDiscussionScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      const Center(child: Text('Explore / Search Screen')),
+      const Center(child: Text('Perpustakaan / Bookmark Screen')),
+      AddDiscussionScreen(
+        onBack: () => setState(() => _currentIndex = 0),
+      ),
+      const ProfileScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -8,6 +8,8 @@ import '../../features/auth/screens/register/register_ktm_screen.dart';
 import '../../features/auth/screens/register/register_form_screen.dart';
 import '../../features/auth/screens/register/register_info_screen.dart';
 import '../../features/auth/screens/register/email_verification_screen.dart';
+import '../../features/auth/screens/home/main_screen.dart';
+import '../../features/auth/screens/discussion/add_discussion_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -19,6 +21,8 @@ class AppRoutes {
   static const String registerForm = '/register-form';
   static const String registerInfo = '/register-info';
   static const String emailVerification = '/email-verification';
+  static const String main = '/main';
+  static const String addDiscussion = '/add-discussion';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -26,45 +30,125 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const SplashScreen(),
         );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
+        );
       case onboarding:
         return MaterialPageRoute(
           builder: (_) => const OnboardingScreen(),
+        );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
         );
       case login:
         return MaterialPageRoute(
           builder: (_) => const LoginScreen(),
         );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
+        );
       case forgotPassword:
         return MaterialPageRoute(
           builder: (_) => const ForgotPasswordScreen(),
+        );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
         );
       case checkEmail:
         final email = settings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => CheckEmailScreen(email: email),
         );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
+        );
       case registerKtm:
         return MaterialPageRoute(
           builder: (_) => const RegisterKtmScreen(),
+        );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
         );
       case registerForm:
         return MaterialPageRoute(
           builder: (_) => const RegisterFormScreen(),
         );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
+        );
       case registerInfo:
         return MaterialPageRoute(
           builder: (_) => const RegisterInfoScreen(),
+        );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
         );
       case emailVerification:
         final email = settings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => EmailVerificationScreen(email: email),
         );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(child: Text('Page Not Found')),
           ),
+        );
+      case main:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+      case addDiscussion:
+        return MaterialPageRoute(
+          builder: (_) => const AddDiscussionScreen(),
         );
     }
   }

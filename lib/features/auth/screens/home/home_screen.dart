@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/post_model.dart';
 import '../discussion/detail_post_screen.dart';
+import '../discussion/add_discussion_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -140,184 +141,31 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _openCreatePostDialog() {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
-    final tagController = TextEditingController(
-      text: _selectedTab == PostCategoryTab.kuliah ? 'DISKUSI KULIAH' : 'KOMUNITAS',
+  void _openCreatePostDialog() async {
+    final newPost = await Navigator.push<PostModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddDiscussionScreen(
+          initialTab: _selectedTab,
+        ),
+      ),
     );
-    PostCategoryTab dialogTab = _selectedTab;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFCBD5E1),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Buat Diskusi Baru',
-                      style: GoogleFonts.manrope(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Tab selector in modal
-                    Row(
-                      children: [
-                        ChoiceChip(
-                          label: Text('Kuliah', style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
-                          selected: dialogTab == PostCategoryTab.kuliah,
-                          selectedColor: const Color(0xFF5584C3),
-                          labelStyle: TextStyle(
-                            color: dialogTab == PostCategoryTab.kuliah ? Colors.white : const Color(0xFF64748B),
-                          ),
-                          onSelected: (val) {
-                            if (val) setModalState(() => dialogTab = PostCategoryTab.kuliah);
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: Text('Luar Kelas', style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
-                          selected: dialogTab == PostCategoryTab.luarKelas,
-                          selectedColor: const Color(0xFF5584C3),
-                          labelStyle: TextStyle(
-                            color: dialogTab == PostCategoryTab.luarKelas ? Colors.white : const Color(0xFF64748B),
-                          ),
-                          onSelected: (val) {
-                            if (val) setModalState(() => dialogTab = PostCategoryTab.luarKelas);
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Tag
-                    TextField(
-                      controller: tagController,
-                      style: GoogleFonts.manrope(fontSize: 13, fontWeight: FontWeight.w600),
-                      decoration: InputDecoration(
-                        labelText: 'Label / Kategori Tag',
-                        isDense: true,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Title
-                    TextField(
-                      controller: titleController,
-                      style: GoogleFonts.manrope(fontSize: 14, fontWeight: FontWeight.w700),
-                      decoration: InputDecoration(
-                        labelText: 'Judul Diskusi',
-                        hintText: 'Contoh: Besok aku UTS...',
-                        isDense: true,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Content
-                    TextField(
-                      controller: contentController,
-                      maxLines: 3,
-                      style: GoogleFonts.manrope(fontSize: 13),
-                      decoration: InputDecoration(
-                        labelText: 'Isi Diskusi / Pertanyaan',
-                        hintText: 'Tuliskan detail pertanyaan atau yang kamu bingungkan...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (titleController.text.trim().isEmpty) return;
-
-                          final newPost = PostModel(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
-                            authorName: 'Alex Chen',
-                            authorAvatar: 'assets/images/userLogo.png',
-                            timeAgo: 'Baru saja',
-                            userRole: 'Mahasiswa HiGavi',
-                            tab: dialogTab,
-                            badges: [
-                              PostBadge(
-                                label: tagController.text.trim().toUpperCase(),
-                                backgroundColor: const Color(0xFFE0F2FE),
-                                textColor: const Color(0xFF0284C7),
-                              ),
-                            ],
-                            title: titleController.text.trim(),
-                            content: contentController.text.trim(),
-                            likesCount: 0,
-                            commentsCount: 0,
-                          );
-
-                          setState(() {
-                            _posts.insert(0, newPost);
-                            _selectedTab = dialogTab;
-                          });
-
-                          Navigator.pop(ctx);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5584C3),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Kirim Diskusi',
-                          style: GoogleFonts.manrope(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+    if (newPost != null) {
+      setState(() {
+        _posts.insert(0, newPost);
+        _selectedTab = newPost.tab;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Postingan berhasil ditambahkan!'),
+            backgroundColor: Color(0xFF22C55E),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-      },
-    );
+      }
+    }
   }
 
   void _showPostOptions(PostModel post) {
