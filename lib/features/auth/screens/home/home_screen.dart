@@ -375,19 +375,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/hiGavi.svg',
+                  Image.asset(
+                    'assets/images/hiGavi.png',
                     height: 52,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => SvgPicture.asset(
+                      'assets/images/hiGavi.svg',
+                      height: 52,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'HiGavi',
+                    'hiGavi',
                     style: GoogleFonts.manrope(
                       fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFF7F9FD),
+                      letterSpacing: 2.0,
+                      height: 28 / 26,
                     ),
                   ),
                 ],

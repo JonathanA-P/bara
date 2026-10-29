@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
@@ -70,13 +71,22 @@ class _MainScreenState extends State<MainScreen> {
                   inactiveColor: inactiveGrey,
                 ),
 
-                // 3. Books / Library
-                _buildNavItem(
-                  index: 2,
-                  activeIcon: Icons.menu_book_rounded,
-                  inactiveIcon: Icons.menu_book_outlined,
-                  activeColor: activeBlue,
-                  inactiveColor: inactiveGrey,
+                // 3. Books / Library (Bookmark)
+                GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 2),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: SvgPicture.asset(
+                      'assets/images/bookmark.svg',
+                      width: 22,
+                      height: 22,
+                      colorFilter: ColorFilter.mode(
+                        _currentIndex == 2 ? activeBlue : inactiveGrey,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
                 ),
 
                 // 4. Chat / Discussion with badge dot
