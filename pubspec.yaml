@@ -81,6 +81,9 @@ flutter:
     - assets/images/buku.svg
     - assets/images/pencil.svg
     - assets/images/logo.png
+    - assets/images/hiGavi.svg
+    - assets/images/userLogo.png
+    - assets/images/chatbar.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

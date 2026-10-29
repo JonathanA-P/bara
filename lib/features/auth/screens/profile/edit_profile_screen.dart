@@ -105,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         child: const CircleAvatar(
                           radius: 36,
-                          backgroundImage: AssetImage('assets/images/CloudArt_margin.png'),
+                          backgroundImage: AssetImage('assets/images/userLogo.png'),
                         ),
                       ),
                     ),

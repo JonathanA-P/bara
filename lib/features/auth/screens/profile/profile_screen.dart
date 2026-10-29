@@ -96,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           radius: 38,
                           backgroundColor: Color(0xFFCBD5E1),
                           backgroundImage:
-                              AssetImage('assets/images/CloudArt_margin.png'),
+                              AssetImage('assets/images/userLogo.png'),
                         ),
                       ),
                     ),

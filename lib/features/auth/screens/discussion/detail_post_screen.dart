@@ -32,7 +32,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'BARA',
+          'HiGavi',
           style: GoogleFonts.manrope(
             fontSize: 18,
             fontWeight: FontWeight.w900,
