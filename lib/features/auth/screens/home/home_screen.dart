@@ -361,66 +361,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredPosts = _posts.where((p) => p.tab == _selectedTab).toList();
+    const Color headerBlue = Color(0xFF4C73A1);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF5584C3), // Top header blue background
+      backgroundColor: headerBlue,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // --- HEADER: HiGavi Mascot & Branding ---
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/hiGavi.png',
-                    height: 52,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => SvgPicture.asset(
-                      'assets/images/hiGavi.svg',
-                      height: 52,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'hiGavi',
-                    style: GoogleFonts.manrope(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFF7F9FD),
-                      letterSpacing: 2.0,
-                      height: 28 / 26,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // --- WHITE CONTENT CONTAINER WITH TABS ---
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(26),
-                    topRight: Radius.circular(26),
-                  ),
-                ),
-                child: Column(
+            // --- HEADER & TABS WITH MASCOT OVERLAY ---
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Layer 1: Blue Header Background + White Tab Bar
+                Column(
                   children: [
-                    // --- TABS BAR: Kuliah vs Luar Kelas ---
+                    // Blue Header Area
+                    Container(
+                      height: 96,
+                      width: double.infinity,
+                      color: headerBlue,
+                    ),
+
+                    // White Tabs Bar
                     Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(26),
-                          topRight: Radius.circular(26),
-                        ),
                         border: Border(
                           bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
                         ),
@@ -444,81 +410,123 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                  ],
+                ),
 
-                    // --- SCROLLABLE FEED CONTENT ---
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
-                        children: [
-                          // --- PROMPT SEARCH / CREATE POST BAR ---
-                          GestureDetector(
-                            onTap: _openCreatePostDialog,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.02),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: Color(0xFFE2E8F0),
-                                    backgroundImage: AssetImage('assets/images/userLogo.png'),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'Apa yang sedang kamu bingungkan?',
-                                        style: GoogleFonts.manrope(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xFF94A3B8),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                // Layer 2: Mascot + HiGavi Text (Paws overlapping the border line)
+                Positioned(
+                  top: 96 - 86 + 11, // Mascot paws hang 11px down over the dividing line
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Image.asset(
+                          'assets/images/hiGavi.png',
+                          height: 86,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => SvgPicture.asset(
+                            'assets/images/hiGavi.svg',
+                            height: 86,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24.0),
+                          child: Text(
+                            'HiGavi',
+                            style: GoogleFonts.manrope(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFF7F9FD),
+                              letterSpacing: 2.0,
+                              height: 1.0,
                             ),
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
-                          const SizedBox(height: 14),
-
-                          // --- DYNAMIC POSTS LIST ---
-                          if (filteredPosts.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 40),
-                              child: Center(
+            // --- SCROLLABLE FEED CONTENT ---
+            Expanded(
+              child: Container(
+                color: const Color(0xFFF8FAFC),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
+                  children: [
+                    // --- PROMPT SEARCH / CREATE POST BAR ---
+                    GestureDetector(
+                      onTap: _openCreatePostDialog,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Color(0xFFE2E8F0),
+                              backgroundImage: AssetImage('assets/images/userLogo.png'),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Text(
-                                  'Belum ada diskusi di kategori ini.\nJadilah yang pertama bertanya!',
-                                  textAlign: TextAlign.center,
+                                  'Apa yang sedang kamu bingungkan?',
                                   style: GoogleFonts.manrope(
-                                    fontSize: 13,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
                                     color: const Color(0xFF94A3B8),
-                                    height: 1.5,
                                   ),
                                 ),
                               ),
-                            )
-                          else
-                            ...filteredPosts.map((post) => _buildPostCard(post)),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+
+                    const SizedBox(height: 14),
+
+                    // --- DYNAMIC POSTS LIST ---
+                    if (filteredPosts.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Text(
+                            'Belum ada diskusi di kategori ini.\nJadilah yang pertama bertanya!',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.manrope(
+                              fontSize: 13,
+                              color: const Color(0xFF94A3B8),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ...filteredPosts.map((post) => _buildPostCard(post)),
                   ],
                 ),
               ),
@@ -534,14 +542,13 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    const activeColor = Color(0xFF4C7BB8);
+    const activeColor = Color(0xFF4C73A1);
     const inactiveColor = Color(0xFF94A3B8);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.only(top: 14, bottom: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -555,8 +562,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 6),
             Container(
-              height: 3,
-              width: 50,
+              height: 3.5,
+              width: 72,
               decoration: BoxDecoration(
                 color: isSelected ? activeColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(2),
