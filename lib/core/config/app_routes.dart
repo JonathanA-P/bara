@@ -30,98 +30,34 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const SplashScreen(),
         );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
-        );
       case onboarding:
         return MaterialPageRoute(
           builder: (_) => const OnboardingScreen(),
-        );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
         );
       case login:
         return MaterialPageRoute(
           builder: (_) => const LoginScreen(),
         );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
-        );
       case forgotPassword:
         return MaterialPageRoute(
           builder: (_) => const ForgotPasswordScreen(),
-        );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
         );
       case checkEmail:
         final email = settings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => CheckEmailScreen(email: email),
         );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
-        );
       case registerKtm:
         return MaterialPageRoute(
           builder: (_) => const RegisterKtmScreen(),
-        );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
         );
       case registerForm:
         return MaterialPageRoute(
           builder: (_) => const RegisterFormScreen(),
         );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
-        );
       case registerInfo:
         return MaterialPageRoute(
           builder: (_) => const RegisterInfoScreen(),
-        );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
         );
       case emailVerification:
         final email = settings.arguments as String? ?? '';
@@ -141,14 +77,6 @@ class AppRoutes {
           builder: (_) => const Scaffold(
             body: Center(child: Text('Page Not Found')),
           ),
-        );
-      case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
         );
     }
   }
