@@ -84,6 +84,10 @@ flutter:
     - assets/images/hiGavi.png
     - assets/images/userLogo.png
     - assets/images/chatbar.png
+    - assets/images/matkul1.png
+    - assets/images/matkul2.png
+    - assets/images/matkul3.png
+    - assets/images/brain.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

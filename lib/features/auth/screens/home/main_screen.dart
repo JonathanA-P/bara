@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
+import '../course/course_screen.dart';
 import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
 
@@ -21,11 +22,9 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = [
       const HomeScreen(),
-      const Center(child: Text('Explore / Search Screen')),
+      const CourseScreen(), // TAB 2: MATA KULIAH / EXPLORE
       const Center(child: Text('Perpustakaan / Bookmark Screen')),
-      AddDiscussionScreen(
-        onBack: () => setState(() => _currentIndex = 0),
-      ),
+      AddDiscussionScreen(onBack: () => setState(() => _currentIndex = 0)),
       const ProfileScreen(),
     ];
   }
@@ -38,10 +37,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
@@ -70,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
                   inactiveColor: inactiveGrey,
                 ),
 
-                // 2. Explore
+                // 2. Explore / Course
                 _buildNavItem(
                   index: 1,
                   activeIcon: Icons.explore_rounded,
@@ -116,7 +112,9 @@ class _MainScreenState extends State<MainScreen> {
                                 ? Icons.chat_bubble_rounded
                                 : Icons.chat_bubble_outline_rounded,
                             size: 24,
-                            color: _currentIndex == 3 ? activeBlue : inactiveGrey,
+                            color: _currentIndex == 3
+                                ? activeBlue
+                                : inactiveGrey,
                           ),
                         ),
                         Positioned(
