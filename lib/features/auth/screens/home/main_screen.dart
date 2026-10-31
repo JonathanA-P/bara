@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import '../course/course_screen.dart';
 import '../profile/profile_screen.dart';
-import '../discussion/add_discussion_screen.dart';
 import '../../../explore/screens/explore_screen.dart';
+import '../../../chat/screens/notification_chat_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,11 +16,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
+  final List<Widget> _screens = [
     HomeScreen(),
     ExploreScreen(),
     CourseScreen(),
-    Scaffold(body: Center(child: Text('Chat Screen'))),
+    const NotificationChatScreen(),
     ProfileScreen(),
   ];
 
@@ -43,7 +43,7 @@ class _MainScreenState extends State<MainScreen> {
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),

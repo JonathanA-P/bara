@@ -90,6 +90,8 @@ flutter:
     - assets/images/brain.png
     - assets/images/tombol_back.png
     - assets/images/bara_tidur.png
+    - assets/images/backgroundDM.png
+    - assets/images/logohigavi.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
