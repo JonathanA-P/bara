@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'course_detail_screen.dart';
 
 class CourseScreen extends StatefulWidget {
   const CourseScreen({super.key});
@@ -19,20 +20,20 @@ class _CourseScreenState extends State<CourseScreen> {
   final _banners = [
     {
       'subtitle': 'KULIAH NGAK PERNAH SESERU INI',
-      'title': 'Pelajari dan persiapkan semestermu',
-      'desc': 'TEMUKAN MATKUL YANG SESUAI DENGAN RENCANA STUDIMU.',
+      'title': 'Pelajari dan persiapkan\nsemestermu',
+      'desc': 'TEMUKAN MATKUL YANG SESUAI DENGAN\nRENCANA STUDIMU.',
       'image': 'assets/images/matkul1.png',
     },
     {
       'subtitle': 'PERSIAPKAN DIRI LEBIH MATANG',
-      'title': 'Rating menunjukkan tingkat kesulitan',
-      'desc': 'SEMAKIN TINGGI RATING, SEMAKIN MENANTANG MATKULNYA.',
+      'title': 'Rating menunjukkan\ntingkat kesulitan',
+      'desc': 'SEMAKIN TINGGI RATING, SEMAKIN\nMENANTANG MATKULNYA.',
       'image': 'assets/images/matkul2.png',
     },
     {
       'subtitle': 'KENALI DOSEN MATA KULIAH',
-      'title': 'Prediksi dosen tidak selalu 100% tepat',
-      'desc': 'PREDIKSI DIBUAT BERDASARKAN DATA YANG TERSEDIA.',
+      'title': 'Prediksi dosen tidak\nselalu 100% tepat',
+      'desc': 'PREDIKSI DIBUAT BERDASARKAN\nDATA YANG TERSEDIA.',
       'image': 'assets/images/matkul3.png',
     },
   ];
@@ -400,303 +401,324 @@ class _CourseScreenState extends State<CourseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.grey50,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderCarousel(),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.grey200),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(
-                              Icons.search_rounded,
-                              color: AppColors.grey800,
-                              size: 20,
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Carousel Full-Bleed
+            _buildHeaderCarousel(),
+            const SizedBox(height: 20),
+
+            // Search Bar & Butang Filter
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF3F8),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.search_rounded,
+                            color: AppColors.grey600,
+                            size: 22,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Cari mata kuliah',
+                            style: TextStyle(
+                              color: AppColors.grey600,
+                              fontSize: 14,
                             ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Cari mata kuliah',
-                              style: TextStyle(
-                                color: AppColors.grey600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    InkWell(
-                      onTap: _showFilterBottomSheet,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _activeFilterCount > 0
-                                ? AppColors.primary1_500
-                                : AppColors.grey200,
-                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: _showFilterBottomSheet,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: _activeFilterCount > 0
+                              ? AppColors.primary1_500
+                              : const Color(0xFFE2E8F0),
                         ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            const Icon(
-                              Icons.tune_rounded,
-                              color: AppColors.primary1_500,
-                              size: 22,
-                            ),
-                            if (_activeFilterCount > 0)
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary1_500,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '$_activeFilterCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const Icon(
+                            Icons.tune_rounded,
+                            color: AppColors.primary1_500,
+                            size: 22,
+                          ),
+                          if (_activeFilterCount > 0)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary1_500,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '$_activeFilterCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (_activeFilterCount > 0) ...[
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      ...selectedProdi.map(
-                        (prodi) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _buildFilterChip(
-                            label: prodi,
-                            onRemove: () {
-                              setState(() => selectedProdi.remove(prodi));
-                            },
-                          ),
-                        ),
-                      ),
-                      if (selectedSemester != null)
-                        _buildFilterChip(
-                          label: 'Semester $selectedSemester',
+            ),
+
+            if (_activeFilterCount > 0) ...[
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    ...selectedProdi.map(
+                      (prodi) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _buildFilterChip(
+                          label: prodi,
                           onRemove: () {
-                            setState(() => selectedSemester = null);
+                            setState(() => selectedProdi.remove(prodi));
                           },
                         ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Daftar Mata Kuliah',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary2_900,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: _showSortBottomSheet,
-                      child: const Text(
-                        'Urutkan',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary1_500,
-                        ),
+                    if (selectedSemester != null)
+                      _buildFilterChip(
+                        label: 'Semester $selectedSemester',
+                        onRemove: () {
+                          setState(() => selectedSemester = null);
+                        },
                       ),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    _buildCourseCard(
-                      badgeText: 'Wajib',
-                      badgeColor: const Color(0xFFDCFCE7),
-                      badgeTextColor: const Color(0xFF15803D),
-                      code: 'IF2123',
-                      title: 'Algoritma & Pemrograman',
-                      sks: '4 SKS',
-                      semester: 'Semester 3',
-                      rating: '4.2',
-                      showGradeBadge: true,
-                      grade: 'A',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCourseCard(
-                      badgeText: 'Pilihan',
-                      badgeColor: const Color(0xFFFEF3C7),
-                      badgeTextColor: const Color(0xFFB45309),
-                      code: 'MA1101',
-                      title: 'Kalkulus Dasar',
-                      sks: '4 SKS',
-                      semester: 'Semester 3',
-                      rating: '4.2',
-                      showGradeBadge: false,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    '- Lihat Semua -',
-                    style: TextStyle(
-                      color: AppColors.primary1_500,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
             ],
-          ),
+
+            const SizedBox(height: 24),
+
+            // Tajuk Senarai Mata Kuliah
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Daftar Mata Kuliah',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary2_900,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _showSortBottomSheet,
+                    child: const Text(
+                      'Urutkan',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary1_500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Senarai Kad Mata Kuliah
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildCourseCard(
+                    badgeText: 'Wajib',
+                    badgeColor: const Color(0xFFDCFCE7),
+                    badgeTextColor: const Color(0xFF15803D),
+                    code: 'IF2123',
+                    title: 'Algoritma & Pemrograman',
+                    sks: '4 SKS',
+                    semester: 'Semester 3',
+                    rating: '4.2',
+                  ),
+                  const SizedBox(height: 14),
+                  _buildCourseCard(
+                    badgeText: 'Pilihan',
+                    badgeColor: const Color(0xFFFEF3C7),
+                    badgeTextColor: const Color(0xFFB45309),
+                    code: 'MA1101',
+                    title: 'Kalkulus Dasar',
+                    sks: '4 SKS',
+                    semester: 'Semester 3',
+                    rating: '4.2',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: TextButton(
+                onPressed: () {},
+                child: const Text(
+                  '- Lihat Semua -',
+                  style: TextStyle(
+                    color: AppColors.primary1_500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHeaderCarousel() {
+    final double topPadding = MediaQuery.of(context).padding.top;
+
     return Container(
-      height: 180,
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary1_500,
-        borderRadius: BorderRadius.circular(20),
-      ),
+      width: double.infinity,
+      color: AppColors.primary1_500,
+      padding: EdgeInsets.only(top: topPadding + 16, bottom: 12),
       child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() => _currentBannerIndex = index);
-            },
-            itemCount: _banners.length,
-            itemBuilder: (context, index) {
-              final banner = _banners[index];
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            banner['subtitle']!,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withOpacity(0.8),
-                              letterSpacing: 0.5,
-                            ),
+          SizedBox(
+            height: 210,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentBannerIndex = index);
+              },
+              itemCount: _banners.length,
+              itemBuilder: (context, index) {
+                final banner = _banners[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Bahagian Teks Kiri
+                      Expanded(
+                        flex: 6,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 28),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                banner['subtitle']!,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withOpacity(0.8),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                banner['title']!,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                banner['desc']!,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withOpacity(0.75),
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            banner['title']!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            banner['desc']!,
-                            style: TextStyle(
-                              fontSize: 8,
-                              color: Colors.white.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 4,
-                      child: Image.asset(
-                        banner['image']!,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.book_rounded,
-                            size: 70,
-                            color: Colors.white,
-                          );
-                        },
+                      // Ilustrasi Kanan
+                      Expanded(
+                        flex: 5,
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: Image.asset(
+                            banner['image']!,
+                            fit: BoxFit.contain,
+                            height: 185,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.book_rounded,
+                                size: 80,
+                                color: Colors.white,
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          Positioned(
-            bottom: 12,
-            left: 20,
-            child: Row(
-              children: List.generate(
-                _banners.length,
-                (index) => Container(
-                  margin: const EdgeInsets.only(right: 4),
-                  width: _currentBannerIndex == index ? 20 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: _currentBannerIndex == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(3),
+                    ],
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+          ),
+
+          // Indikator Dot Carousel
+          Positioned(
+            bottom: 8,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_banners.length, (index) {
+                final bool isActive = _currentBannerIndex == index;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: isActive ? 36 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? const Color(0xFF2C4A75)
+                        : Colors.white.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
             ),
           ),
         ],
@@ -748,157 +770,140 @@ class _CourseScreenState extends State<CourseScreen> {
     required String sks,
     required String semester,
     required String rating,
-    required bool showGradeBadge,
-    String grade = 'A',
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.grey200),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: badgeColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: TextStyle(
-                        color: badgeTextColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    color: badgeTextColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/brain.png',
-                        width: 18,
-                        height: 18,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.psychology_rounded,
-                            size: 18,
-                            color: Colors.pinkAccent,
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        rating,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
+                ),
+              ),
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/brain.png',
+                    width: 18,
+                    height: 18,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.psychology_rounded,
+                        size: 18,
+                        color: Colors.pinkAccent,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    rating,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                code,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary1_500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary2_900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$sks  •  $semester',
-                style: const TextStyle(fontSize: 11, color: AppColors.grey800),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                height: 38,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary1_500,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        'Lihat Detail Matkul',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
-          if (showGradeBadge)
-            Positioned(
-              right: 12,
-              bottom: 50,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6B21A8),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+          const SizedBox(height: 8),
+          Text(
+            code,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary1_500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary2_900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$sks  •  $semester',
+            style: const TextStyle(fontSize: 11, color: AppColors.grey800),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: () {
+                // NAVIGASI PUSH KE COURSE DETAIL SCREEN
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseDetailScreen(
+                      code: code,
+                      title: title,
+                      category: 'MATA KULIAH ${badgeText.toUpperCase()}',
+                      sks:
+                          int.tryParse(sks.replaceAll(RegExp(r'[^0-9]'), '')) ??
+                          4,
+                      semester:
+                          int.tryParse(
+                            semester.replaceAll(RegExp(r'[^0-9]'), ''),
+                          ) ??
+                          3,
+                      rating: double.tryParse(rating) ?? 4.2,
                     ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  grade,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
                   ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary1_500,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    'Lihat Detail Matkul',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
             ),
+          ),
         ],
       ),
     );

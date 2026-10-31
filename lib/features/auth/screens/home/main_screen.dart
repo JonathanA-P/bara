@@ -22,8 +22,8 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = [
       const HomeScreen(),
-      const CourseScreen(), // TAB 2: MATA KULIAH / EXPLORE
-      const Center(child: Text('Perpustakaan / Bookmark Screen')),
+      const Center(child: Text('Search / Explore Screen')),
+      const CourseScreen(),
       AddDiscussionScreen(onBack: () => setState(() => _currentIndex = 0)),
       const ProfileScreen(),
     ];
@@ -57,7 +57,6 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // 1. Home
                 _buildNavItem(
                   index: 0,
                   activeIcon: Icons.home_rounded,
@@ -66,7 +65,6 @@ class _MainScreenState extends State<MainScreen> {
                   inactiveColor: inactiveGrey,
                 ),
 
-                // 2. Explore / Course
                 _buildNavItem(
                   index: 1,
                   activeIcon: Icons.explore_rounded,
@@ -75,7 +73,6 @@ class _MainScreenState extends State<MainScreen> {
                   inactiveColor: inactiveGrey,
                 ),
 
-                // 3. Books / Library (Bookmark)
                 GestureDetector(
                   onTap: () => setState(() => _currentIndex = 2),
                   behavior: HitTestBehavior.opaque,
@@ -93,7 +90,6 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
 
-                // 4. Chat / Discussion with badge dot
                 GestureDetector(
                   onTap: () => setState(() => _currentIndex = 3),
                   behavior: HitTestBehavior.opaque,
@@ -134,7 +130,6 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
 
-                // 5. Profile
                 _buildNavItem(
                   index: 4,
                   activeIcon: Icons.person_rounded,
