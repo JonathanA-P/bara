@@ -254,31 +254,49 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   Widget _buildCourseStats() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildStatItem('SKS', '${widget.sks} SKS', isPrimary: true),
-        _buildStatItem('Semester', '${widget.semester}', isPrimary: true),
-        InkWell(
-          onTap: () {
-            CourseRatingScreen.showPreviewBottomSheet(
-              context,
-              rating: widget.rating,
-              totalRating: 48,
-            );
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        Expanded(
+          child: _buildStatItem('SKS', '${widget.sks} SKS', isPrimary: true),
+        ),
+        Expanded(
+          child: _buildStatItem('Semester', '${widget.semester}', isPrimary: true),
+        ),
+        Expanded(
+          child: InkWell(
+            onTap: () {
+              CourseRatingScreen.showPreviewBottomSheet(
+                context,
+                rating: widget.rating,
+                totalRating: 48,
+              );
+            },
+            borderRadius: BorderRadius.circular(8),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
                   'Kesulitan',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text('🧠 ', style: TextStyle(fontSize: 14)),
+                    Image.asset(
+                      'assets/images/brain.png',
+                      width: 18,
+                      height: 18,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Text('🧠 ', style: TextStyle(fontSize: 14)),
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       '${widget.rating}',
                       style: const TextStyle(
@@ -289,9 +307,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 const Text(
                   '48 rating',
-                  style: TextStyle(color: Colors.grey, fontSize: 10),
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),
@@ -303,17 +325,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   Widget _buildStatItem(String label, String value, {bool isPrimary = false}) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF64748B),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 6),
         Text(
           value,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: isPrimary ? const Color(0xFF2B6CB0) : Colors.black87,
+            color: isPrimary ? const Color(0xFF2B6CB0) : const Color(0xFF0F172A),
           ),
         ),
+        const SizedBox(height: 14),
       ],
     );
   }

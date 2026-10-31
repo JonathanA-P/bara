@@ -260,15 +260,13 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
           // 1. Wallpaper Pattern Background Maskot Bara (backgroundDM.png)
           Positioned.fill(
             child: Container(
-              color: const Color(0xFFF8FAFC),
-              child: Opacity(
-                opacity: 0.08,
-                child: Image.asset(
-                  'assets/images/backgroundDM.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
-                ),
+              color: Colors.white,
+              child: Image.asset(
+                'assets/images/backgroundDM.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
             ),
           ),

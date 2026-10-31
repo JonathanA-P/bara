@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredPosts = _posts.where((p) => p.tab == _selectedTab).toList();
-    const Color headerBlue = Color(0xFF4C73A1);
+    const Color headerBlue = Color(0xFF5A7FBA);
 
     return Scaffold(
       backgroundColor: headerBlue,
@@ -263,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Layer 2: Mascot + HiGavi Text (Paws overlapping the border line)
                 Positioned(
-                  top: 96 - 86 + 11, // Mascot paws hang 11px down over the dividing line
+                  top: 96 - 94 + 13, // Mascot paws hang 13px down over the dividing line
                   left: 0,
                   right: 0,
                   child: Center(
@@ -273,24 +273,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Image.asset(
                           'assets/images/hiGavi.png',
-                          height: 86,
+                          height: 94,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) => SvgPicture.asset(
                             'assets/images/hiGavi.svg',
-                            height: 86,
+                            height: 94,
                             fit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 4),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 24.0),
+                          padding: const EdgeInsets.only(bottom: 14.0),
                           child: Text(
                             'HiGavi',
                             style: GoogleFonts.manrope(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFF7F9FD),
-                              letterSpacing: 2.0,
+                              fontSize: 27,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFF8FAFC),
+                              letterSpacing: 0.5,
                               height: 1.0,
                             ),
                           ),
@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    const activeColor = Color(0xFF4C73A1);
+    const activeColor = Color(0xFF5A7FBA);
     const inactiveColor = Color(0xFF94A3B8);
 
     return InkWell(
