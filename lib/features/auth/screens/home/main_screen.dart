@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import '../course/course_screen.dart';
 import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
+import '../../../explore/screens/explore_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,19 +16,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      const HomeScreen(),
-      const Center(child: Text('Search / Explore Screen')),
-      const CourseScreen(),
-      AddDiscussionScreen(onBack: () => setState(() => _currentIndex = 0)),
-      const ProfileScreen(),
-    ];
-  }
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    ExploreScreen(),
+    CourseScreen(),
+    Scaffold(body: Center(child: Text('Chat Screen'))),
+    ProfileScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +43,7 @@ class _MainScreenState extends State<MainScreen> {
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withOpacity(0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -64,7 +59,6 @@ class _MainScreenState extends State<MainScreen> {
                   activeColor: activeBlue,
                   inactiveColor: inactiveGrey,
                 ),
-
                 _buildNavItem(
                   index: 1,
                   activeIcon: Icons.explore_rounded,
@@ -72,7 +66,6 @@ class _MainScreenState extends State<MainScreen> {
                   activeColor: activeBlue,
                   inactiveColor: inactiveGrey,
                 ),
-
                 GestureDetector(
                   onTap: () => setState(() => _currentIndex = 2),
                   behavior: HitTestBehavior.opaque,
@@ -89,7 +82,6 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                 ),
-
                 GestureDetector(
                   onTap: () => setState(() => _currentIndex = 3),
                   behavior: HitTestBehavior.opaque,
@@ -129,7 +121,6 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                 ),
-
                 _buildNavItem(
                   index: 4,
                   activeIcon: Icons.person_rounded,
