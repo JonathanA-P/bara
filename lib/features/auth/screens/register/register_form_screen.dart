@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/app_data_controller.dart';
 import 'register_info_screen.dart';
 
 /// Fase 5 - Registration form with name, email, NIM, program studi
@@ -19,12 +21,9 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
   final List<String> _prodiList = [
     'Teknik Informatika',
     'Sistem Informasi',
-    'Teknik Elektro',
-    'Teknik Mesin',
-    'Ilmu Komputer',
-    'Matematika',
-    'Fisika',
-    'Kimia',
+    'Teknik Komputer',
+    'Teknologi Informasi',
+    'Pendidikan Teknologi Informasi',
   ];
 
   @override
@@ -35,9 +34,42 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     super.dispose();
   }
 
+  void _handleNextStep() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final nim = _nimController.text.trim();
+    final prodi = _selectedProdi ?? 'Teknik Informatika';
+
+    if (name.isEmpty || email.isEmpty || nim.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap lengkapi Nama Lengkap, Email Kampus, dan NIM.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final ctrl = AppDataController.instance;
+    ctrl.pendingRegName = name;
+    ctrl.pendingRegEmail = email;
+    ctrl.pendingRegNim = nim;
+    ctrl.pendingRegProdi = prodi;
+
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => const RegisterInfoScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF1B3A5C);
     const Color buttonBlue = Color(0xFF2D5F8A);
     const Color fieldBorder = Color(0xFFCBD5E1);
     const Color textDark = Color(0xFF1E293B);
@@ -114,7 +146,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
               const SizedBox(height: 8),
               _buildInputField(
                 controller: _emailController,
-                hintText: 'Email kampus',
+                hintText: 'nama@student.ub.ac.id',
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 18),
@@ -151,7 +183,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                         color: const Color(0xFFCBD5E1),
                       ),
                     ),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.keyboard_arrow_down,
                       color: textMuted,
                     ),
@@ -181,14 +213,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterInfoScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _handleNextStep,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,
                     elevation: 0,
@@ -293,4 +318,3 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     );
   }
 }
-

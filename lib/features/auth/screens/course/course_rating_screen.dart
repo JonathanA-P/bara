@@ -1,38 +1,23 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/services/app_data_controller.dart';
 import 'add_course_rating_screen.dart';
 
-typedef ReviewData = Map<String, String>;
-
-class CourseRatingScreen extends StatelessWidget {
+class CourseRatingScreen extends StatefulWidget {
+  final String courseCode;
   final double rating;
   final int totalRating;
 
-  const CourseRatingScreen({Key? key, this.rating = 4.2, this.totalRating = 48})
-    : super(key: key);
-
-  static final List<ReviewData> _dummyReviews = [
-    {
-      'username': 'A**** P*******',
-      'comment':
-          'So farr matkulnya sulit, khususnya waktu ngerjain proyeeek plsss',
-      'score': '4.2',
-    },
-    {
-      'username': 'A**** P*******',
-      'comment':
-          'So farr matkulnya sulit, khususnya waktu ngerjain proyeeek plsss',
-      'score': '4.2',
-    },
-    {
-      'username': 'A**** P*******',
-      'comment':
-          'So farr matkulnya sulit, khususnya waktu ngerjain proyeeek plsss',
-      'score': '4.2',
-    },
-  ];
+  const CourseRatingScreen({
+    super.key,
+    this.courseCode = 'IF2123',
+    this.rating = 4.2,
+    this.totalRating = 48,
+  });
 
   static void showPreviewBottomSheet(
     BuildContext context, {
+    String courseCode = 'IF2123',
     double rating = 4.2,
     int totalRating = 48,
   }) {
@@ -43,10 +28,11 @@ class CourseRatingScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetCtx) {
+        final course = AppDataController.instance.getCourseByCode(courseCode);
         return Container(
           padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.55,
+          height: MediaQuery.of(context).size.height * 0.62,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -61,18 +47,90 @@ class CourseRatingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildRatingHeader(rating, totalRating),
+              _CourseRatingScreenState.buildRatingHeader(
+                course.rating,
+                course.totalRatings,
+              ),
               const Divider(height: 24, color: Color(0xFFF1F5F9)),
               Expanded(
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  itemCount: _dummyReviews.length,
-                  separatorBuilder: (_, __) =>
+                  itemCount: course.reviews.length,
+                  separatorBuilder: (context, index) =>
                       const Divider(color: Color(0xFFF1F5F9)),
                   itemBuilder: (context, index) {
-                    return _buildReviewTile(_dummyReviews[index]);
+                    return _CourseRatingScreenState.buildReviewTile(
+                      course.reviews[index],
+                    );
                   },
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(sheetCtx);
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => CourseRatingScreen(
+                              courseCode: courseCode,
+                              rating: course.rating,
+                              totalRating: course.totalRatings,
+                            ),
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Lihat Semua Ulasan',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(sheetCtx);
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => AddCourseRatingScreen(
+                              courseCode: courseCode,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5A85C1),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Beri Rating',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -82,7 +140,32 @@ class CourseRatingScreen extends StatelessWidget {
   }
 
   @override
+  State<CourseRatingScreen> createState() => _CourseRatingScreenState();
+}
+
+class _CourseRatingScreenState extends State<CourseRatingScreen> {
+  final AppDataController _dataController = AppDataController.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataController.addListener(_onDataUpdated);
+  }
+
+  void _onDataUpdated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _dataController.removeListener(_onDataUpdated);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final course = _dataController.getCourseByCode(widget.courseCode);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -109,14 +192,19 @@ class CourseRatingScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                _buildRatingHeader(rating, totalRating),
+                buildRatingHeader(
+                  course.rating,
+                  course.totalRatings,
+                ),
                 const SizedBox(height: 20),
                 InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddCourseRatingScreen(),
+                      CupertinoPageRoute(
+                        builder: (context) => AddCourseRatingScreen(
+                          courseCode: course.code,
+                        ),
                       ),
                     );
                   },
@@ -131,19 +219,16 @@ class CourseRatingScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
-                      children: const [
+                      children: [
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor: Color(0xFFCBD5E1),
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          backgroundColor: const Color(0xFFCBD5E1),
+                          backgroundImage:
+                              AssetImage(_dataController.currentAvatar),
                         ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Berapa rating kesulitan matkul ini',
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Berapa rating kesulitan matkul ini?',
                           style: TextStyle(
                             color: Color(0xFF64748B),
                             fontSize: 13,
@@ -164,9 +249,9 @@ class CourseRatingScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Ulasan',
-                    style: TextStyle(
+                  Text(
+                    'Ulasan (${course.reviews.length})',
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1E293B),
@@ -176,11 +261,13 @@ class CourseRatingScreen extends StatelessWidget {
                   Expanded(
                     child: ListView.separated(
                       physics: const BouncingScrollPhysics(),
-                      itemCount: _dummyReviews.length,
-                      separatorBuilder: (_, __) =>
+                      itemCount: course.reviews.length,
+                      separatorBuilder: (context, index) =>
                           const Divider(color: Color(0xFFF1F5F9)),
                       itemBuilder: (context, index) {
-                        return _buildReviewTile(_dummyReviews[index]);
+                        return buildReviewTile(
+                          course.reviews[index],
+                        );
                       },
                     ),
                   ),
@@ -193,7 +280,7 @@ class CourseRatingScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildRatingHeader(double score, int total) {
+  static Widget buildRatingHeader(double score, int total) {
     return Row(
       children: [
         const Text('🧠 ', style: TextStyle(fontSize: 32)),
@@ -228,29 +315,62 @@ class CourseRatingScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildReviewTile(ReviewData review) {
+  static Widget buildReviewTile(CourseReviewModel review) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(radius: 20, backgroundColor: Color(0xFF3882C5)),
+          const CircleAvatar(
+            radius: 20,
+            backgroundColor: Color(0xFF3882C5),
+            child: Icon(Icons.person, color: Colors.white, size: 20),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  review['username']!,
+                  review.username,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: Color(0xFF1E293B),
                   ),
                 ),
+                if (review.tags.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: review.tags
+                        .map(
+                          (t) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEBF8FF),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              t,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2B6CB0),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
-                  review['comment']!,
+                  review.comment,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
@@ -264,7 +384,7 @@ class CourseRatingScreen extends StatelessWidget {
             children: [
               const Text('🧠 ', style: TextStyle(fontSize: 12)),
               Text(
-                review['score']!,
+                '${review.score}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,

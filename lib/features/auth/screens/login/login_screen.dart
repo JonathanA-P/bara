@@ -1,8 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:bara/features/auth/screens/home/main_screen.dart';
-import 'package:bara/features/auth/screens/forgot_password/forgot_password_screen.dart';
-import 'package:bara/features/auth/screens/register/register_ktm_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../../core/services/auth_service.dart';
+import '../home/main_screen.dart';
+import '../forgot_password/forgot_password_screen.dart';
+import '../register/email_verification_screen.dart';
+import '../register/register_ktm_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,12 +22,90 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isObscure = true;
   bool _rememberMe = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap isi email kampus dan password terlebih dahulu.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().signIn(email: email, password: password);
+      await AppDataController.instance.loginWithCredentials(
+        emailOrUsername: email,
+      );
+      await AppDataController.instance.syncDiscussionsFromSupabase();
+      await AppDataController.instance.syncChatsFromSupabase();
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      if (e.message.toLowerCase().contains('email not confirmed')) {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => EmailVerificationScreen(email: email),
+          ),
+        );
+        return;
+      }
+      await AppDataController.instance.loginWithCredentials(
+        emailOrUsername: email,
+      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+        );
+      }
+    } catch (_) {
+      await AppDataController.instance.loginWithCredentials(
+        emailOrUsername: email,
+      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -34,6 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
     const Color textDark = Color(0xFF1E293B);
     const Color textMuted = Color(0xFF64748B);
     const Color bgColor = Color(0xFFF5F8FF);
+
+    final firstName = AppDataController.instance.currentName.split(' ').first;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -54,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Title
                       Text(
-                        'Welcome back, Alex',
+                        'Welcome back, $firstName',
                         style: GoogleFonts.manrope(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -90,8 +175,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Email field
                       _buildTextField(
                         controller: _emailController,
-                        hintText: '',
-                        prefixIcon: Icon(
+                        hintText: 'nama@student.ub.ac.id',
+                        prefixIcon: const Icon(
                           Icons.email_outlined,
                           color: textMuted,
                           size: 20,
@@ -129,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             horizontal: 14, vertical: 2),
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.lock_outline,
                               color: textMuted,
                               size: 20,
@@ -140,6 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 controller: _passwordController,
                                 obscureText: _isObscure,
                                 onChanged: (_) => setState(() {}),
+                                onSubmitted: (_) => _handleLogin(),
                                 style: GoogleFonts.manrope(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -148,6 +234,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   isDense: true,
+                                  hintText: 'Masukkan password',
+                                  hintStyle: GoogleFonts.manrope(
+                                    fontSize: 14,
+                                    color: const Color(0xFFCBD5E1),
+                                  ),
                                   contentPadding:
                                       const EdgeInsets.symmetric(vertical: 12),
                                 ),
@@ -187,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                     color: fieldBorder,
                                     width: 1.5,
                                   ),
@@ -213,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                CupertinoPageRoute(
                                   builder: (context) =>
                                       const ForgotPasswordScreen(),
                                 ),
@@ -237,14 +328,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MainScreen(),
-                              ),
-                            );
-                          },
+                          onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryBlue,
                             elevation: 0,
@@ -252,14 +336,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          child: Text(
-                            'Login',
-                            style: GoogleFonts.manrope(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : Text(
+                                  'Login',
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -271,13 +364,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE8F5E9),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE8F5E9),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.verified_user_outlined,
-                              color: const Color(0xFF4CAF50),
+                              color: Color(0xFF4CAF50),
                               size: 18,
                             ),
                           ),
@@ -307,7 +400,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
 
-                      // Spacer to push "Belum punya akun?" to the bottom
                       const Spacer(),
 
                       // Register link at bottom
@@ -329,7 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
+                                    CupertinoPageRoute(
                                       builder: (context) =>
                                           const RegisterKtmScreen(),
                                     ),
@@ -379,6 +471,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: TextInputType.emailAddress,
               onChanged: (_) => setState(() {}),
               style: GoogleFonts.manrope(
                 fontSize: 14,

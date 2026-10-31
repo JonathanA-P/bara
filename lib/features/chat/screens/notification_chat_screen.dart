@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/services/app_data_controller.dart';
+import '../../auth/screens/discussion/detail_post_screen.dart';
+import '../../auth/screens/profile/profile_screen.dart';
 import 'direct_chat_screen.dart';
 
 class NotificationChatScreen extends StatefulWidget {
@@ -19,99 +22,49 @@ class NotificationChatScreen extends StatefulWidget {
 class _NotificationChatScreenState extends State<NotificationChatScreen> {
   late int _selectedTab; // 0: Notifikasi, 1: Pesan
   late final PageController _pageController;
+  final AppDataController _dataController = AppDataController.instance;
 
-  // Data Notifikasi (Figma)
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'id': '1',
-      'name': 'Alex Chen',
-      'date': '08/10/26',
-      'message': 'Menyukai postingan kamu.',
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '2',
-      'name': 'Alex Chen',
-      'date': '08/10/26',
-      'message': 'Mulai mengikuti kamu.',
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '3',
-      'name': 'Alex Chen',
-      'date': '08/10/26',
-      'message': 'Postingan kamu dihapus karena melanggar.',
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '4',
-      'name': 'Alex Chen',
-      'date': '08/10/26',
-      'message': 'Menyukai postingan kamu.',
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '5',
-      'name': 'Alex Chen',
-      'date': '08/10/26',
-      'message': 'Menyukai postingan kamu.',
-      'avatar': 'assets/images/userLogo.png',
-    },
-  ];
+  List<Map<String, dynamic>> get _notifications =>
+      _dataController.notifications;
 
-  // Data Pesan (Figma)
-  final List<Map<String, dynamic>> _chats = [
-    {
-      'id': '1',
-      'name': 'Alex Chen',
-      'time': 'Hari ini',
-      'lastMessage': 'Udah makan belum?',
-      'unreadCount': 0,
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '2',
-      'name': 'Alex Chen',
-      'time': 'Kemarin',
-      'lastMessage': 'Hayuk mabar bro',
-      'unreadCount': 2,
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '3',
-      'name': 'Alex Chen',
-      'time': '08/10/26',
-      'lastMessage': 'Ok',
-      'unreadCount': 0,
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '4',
-      'name': 'Alex Chen',
-      'time': '08/10/26',
-      'lastMessage': 'Terima kasih atas perhatiannya.',
-      'unreadCount': 99,
-      'avatar': 'assets/images/userLogo.png',
-    },
-    {
-      'id': '5',
-      'name': 'Alex Chen',
-      'time': '08/10/26',
-      'lastMessage': 'Gokil brok',
-      'unreadCount': 0,
-      'avatar': 'assets/images/userLogo.png',
-    },
-  ];
+  List<Map<String, dynamic>> get _chats {
+    final rooms = List<Map<String, dynamic>>.from(_dataController.chatRooms);
+    for (final user in _dataController.users) {
+      final exists = rooms.any(
+        (r) =>
+            (r['name'] as String? ?? '').toLowerCase() ==
+            user.name.toLowerCase(),
+      );
+      if (!exists) {
+        rooms.add({
+          'id': user.id,
+          'peerId': user.id,
+          'name': user.name,
+          'time': user.major,
+          'lastMessage': 'Ketuk untuk mulai percakapan',
+          'unreadCount': 0,
+          'avatar': user.avatar,
+        });
+      }
+    }
+    return rooms;
+  }
 
   @override
   void initState() {
     super.initState();
     _selectedTab = widget.initialTabIndex;
     _pageController = PageController(initialPage: _selectedTab);
+    _dataController.addListener(_onDataChanged);
+  }
+
+  void _onDataChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _dataController.removeListener(_onDataChanged);
     _pageController.dispose();
     super.dispose();
   }
@@ -129,7 +82,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
 
   Future<void> _onRefresh() async {
     HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 650));
+    await _dataController.syncWithSupabase();
     if (mounted) setState(() {});
   }
 
@@ -139,6 +92,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
   ) async {
     final position = details.globalPosition;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final notif = _notifications[index];
 
     final value = await showMenu<String>(
       context: context,
@@ -193,9 +147,14 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
         ),
       );
     } else if (value == 'lapor' && mounted) {
+      await _dataController.submitIncidentReport(
+        accusedName: notif['name'] ?? 'Pengguna',
+        category: 'Notifikasi Mencurigakan',
+        description: notif['message'] ?? '',
+      );
       scaffoldMessenger.showSnackBar(
         const SnackBar(
-          content: Text('Laporan terkirim'),
+          content: Text('Laporan terkirim ke moderator'),
           duration: Duration(seconds: 1),
           behavior: SnackBarBehavior.floating,
         ),
@@ -209,6 +168,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
   ) async {
     final position = details.globalPosition;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final chat = _chats[index];
 
     final value = await showMenu<String>(
       context: context,
@@ -263,6 +223,11 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
         ),
       );
     } else if (value == 'lapor' && mounted) {
+      await _dataController.submitIncidentReport(
+        accusedName: chat['name'] ?? 'Pengguna',
+        category: 'Pelanggaran Pesan',
+        description: chat['lastMessage'] ?? '',
+      );
       scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('Laporan pesan terkirim'),
@@ -457,79 +422,116 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
           final notif = _notifications[index];
           TapDownDetails? tapDownDetails;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: const Color(0xFFCBD5E1),
-                  backgroundImage: AssetImage(notif['avatar']),
-                ),
-                const SizedBox(width: 12),
-
-                // Title and Message
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: notif['name'],
-                              style: GoogleFonts.manrope(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF1E293B),
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' • ${notif['date']}',
-                              style: GoogleFonts.manrope(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        notif['message'],
-                        style: GoogleFonts.manrope(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF64748B),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+          return InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() {
+                notif['isRead'] = true;
+              });
+              final targetPostId = notif['targetPostId'] as String?;
+              if (targetPostId != null) {
+                final matched = _dataController.posts
+                    .where((p) => p.id == targetPostId)
+                    .toList();
+                if (matched.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => DetailPostScreen(post: matched.first),
+                    ),
+                  );
+                  return;
+                }
+              }
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (_) => ProfileScreen(
+                    peerName: notif['name'] ?? 'Alex Chen',
+                    isStranger: true,
                   ),
                 ),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Avatar
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: const Color(0xFFCBD5E1),
+                    backgroundImage: AssetImage(notif['avatar']),
+                  ),
+                  const SizedBox(width: 12),
 
-                // 3-dots action button
-                GestureDetector(
-                  onTapDown: (details) => tapDownDetails = details,
-                  onTap: () {
-                    if (tapDownDetails != null) {
-                      _showNotificationOptions(tapDownDetails!, index);
-                    }
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.more_horiz_rounded,
-                      color: Color(0xFF94A3B8),
-                      size: 20,
+                  // Title and Message
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: notif['name'],
+                                style: GoogleFonts.manrope(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF1E293B),
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' • ${notif['date']}',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          notif['message'],
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: notif['isRead'] == true
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                            color: notif['isRead'] == true
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF1E293B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+
+                  // 3-dots action button
+                  GestureDetector(
+                    onTapDown: (details) => tapDownDetails = details,
+                    onTap: () {
+                      if (tapDownDetails != null) {
+                        _showNotificationOptions(tapDownDetails!, index);
+                      }
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.more_horiz_rounded,
+                        color: Color(0xFF94A3B8),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -568,11 +570,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
           return InkWell(
             onTap: () {
               HapticFeedback.selectionClick();
-              if (unreadCount > 0) {
-                setState(() {
-                  _chats[index]['unreadCount'] = 0;
-                });
-              }
+              _dataController.markChatAsRead(chat['name']);
               Navigator.push(
                 context,
                 CupertinoPageRoute(

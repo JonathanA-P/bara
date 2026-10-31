@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'models/post_model.dart';
-import '../discussion/detail_post_screen.dart';
+import '../../../../core/services/app_data_controller.dart';
 import '../discussion/add_discussion_screen.dart';
+import '../discussion/detail_post_screen.dart';
+import '../profile/profile_screen.dart';
+import 'models/post_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,10 +17,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final AppDataController _dataController = AppDataController.instance;
   PostCategoryTab _selectedTab = PostCategoryTab.kuliah;
   late final PageController _tabPageController;
 
-  late List<PostModel> _posts;
+  List<PostModel> get _posts => _dataController.posts;
 
   final Set<String> _heartBurstPostIds = {};
 
@@ -26,114 +29,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _tabPageController = PageController(initialPage: 0);
-    _posts = _getInitialPosts();
+    _dataController.addListener(_onDataChanged);
+  }
+
+  void _onDataChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _dataController.removeListener(_onDataChanged);
     _tabPageController.dispose();
     super.dispose();
-  }
-
-  List<PostModel> _getInitialPosts() {
-    return [
-      PostModel(
-        id: 'kuliah_1',
-        authorName: 'Alex Chen',
-        authorAvatar: 'assets/images/userLogo.png',
-        timeAgo: '2j lalu',
-        userRole: 'Sistem Informasi • Angkatan 2023',
-        tab: PostCategoryTab.kuliah,
-        badges: const [
-          PostBadge(
-            label: 'SISTEM INFOR...',
-            backgroundColor: Color(0xFFF97316),
-            textColor: Colors.white,
-          ),
-          PostBadge(
-            label: 'PROBABILITAS ...',
-            backgroundColor: Color(0xFFE0F2FE),
-            textColor: Color(0xFF0284C7),
-          ),
-        ],
-        title:
-            'Besok aku UTS, ada yang punya materi atau catetan gaa? Dosenku AFK : (',
-        content:
-            'Aku baru masuk materi modul 1, tapi kaya ini susah banget gilak!!! Kalau ada yang mau belajar barng sokk kita ke CW',
-        likesCount: 124,
-        commentsCount: 32,
-      ),
-
-      PostModel(
-        id: 'kuliah_2',
-        authorName: 'Alex Chen',
-        authorAvatar: 'assets/images/userLogo.png',
-        timeAgo: '2j lalu',
-        userRole: 'Teknik Komputer • Angkatan 2022',
-        tab: PostCategoryTab.kuliah,
-        badges: const [
-          PostBadge(
-            label: 'TEKNIK KOMPUTER',
-            backgroundColor: Color(0xFFEAB308),
-            textColor: Colors.white,
-          ),
-          PostBadge(
-            label: 'ALGORITHM DESIGN',
-            backgroundColor: Color(0xFFE0F2FE),
-            textColor: Color(0xFF0284C7),
-          ),
-        ],
-        title: 'How do you optimize BFS traversal for large graphs?',
-        content: 'I\'m working on a social network ......',
-        imageAttachment: 'assets/images/CloudArt_margin.png',
-        likesCount: 124,
-        commentsCount: 32,
-      ),
-
-      PostModel(
-        id: 'luar_1',
-        authorName: 'Alex Chen',
-        authorAvatar: 'assets/images/userLogo.png',
-        timeAgo: '2j lalu',
-        userRole: 'HiGavi Community Enthusiast',
-        tab: PostCategoryTab.luarKelas,
-        badges: const [
-          PostBadge(
-            label: 'AMHIGAVIWA MEME',
-            backgroundColor: Color(0xFFE0F2FE),
-            textColor: Color(0xFF0284C7),
-          ),
-        ],
-        title:
-            'Besok aku UTS, ada yang punya materi atau catetan gaa? Dosenku AFK : (',
-        content:
-            'Aku baru masuk materi modul 1, tapi kaya ini susah banget gilak!!! Kalau ada yang mau belajar barng sokk kita ke CW',
-        likesCount: 124,
-        commentsCount: 32,
-      ),
-
-      PostModel(
-        id: 'luar_2',
-        authorName: 'Alex Chen',
-        authorAvatar: 'assets/images/userLogo.png',
-        timeAgo: '2j lalu',
-        userRole: 'Campus Storyteller',
-        tab: PostCategoryTab.luarKelas,
-        badges: const [
-          PostBadge(
-            label: 'HOROR SERIES',
-            backgroundColor: Color(0xFFE0F2FE),
-            textColor: Color(0xFF0284C7),
-          ),
-        ],
-        title:
-            'Besok aku UTS, ada yang punya materi atau catetan gaa? Dosenku AFK : (',
-        content:
-            'Aku baru masuk materi modul 1, tapi kaya ini susah banget gilak!!! Kalau ada yang mau belajar barng sokk kita ke CW',
-        likesCount: 124,
-        commentsCount: 32,
-      ),
-    ];
   }
 
   void _switchTab(PostCategoryTab tab) {
@@ -150,38 +57,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onRefresh() async {
     HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 650));
+    await _dataController.syncWithSupabase();
     if (mounted) setState(() {});
   }
 
   void _toggleLike(String postId) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final index = _posts.indexWhere((p) => p.id == postId);
-      if (index != -1) {
-        final post = _posts[index];
-        final newIsLiked = !post.isLiked;
-        final newLikes = newIsLiked ? post.likesCount + 1 : post.likesCount - 1;
-        _posts[index] = post.copyWith(
-          isLiked: newIsLiked,
-          likesCount: newLikes < 0 ? 0 : newLikes,
-        );
-      }
-    });
+    _dataController.toggleLikePost(postId);
   }
 
   void _onDoubleTapPost(PostModel post) {
     HapticFeedback.mediumImpact();
+    _dataController.setLikePost(post.id, true);
     setState(() {
-      if (!post.isLiked) {
-        final index = _posts.indexWhere((p) => p.id == post.id);
-        if (index != -1) {
-          _posts[index] = post.copyWith(
-            isLiked: true,
-            likesCount: post.likesCount + 1,
-          );
-        }
-      }
       _heartBurstPostIds.add(post.id);
     });
 
@@ -205,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (newPost != null) {
       setState(() {
-        _posts.insert(0, newPost);
         _selectedTab = newPost.tab;
       });
       final targetPage = newPost.tab == PostCategoryTab.kuliah ? 0 : 1;
@@ -235,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetCtx) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -252,25 +139,54 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               ListTile(
                 leading: const Icon(
-                  Icons.share_outlined,
+                  Icons.person_outline_rounded,
                   color: Color(0xFF5584C3),
                 ),
                 title: Text(
-                  'Bagikan Tautan Diskusi',
+                  'Lihat Profil ${post.authorName}',
                   style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
                 ),
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => ProfileScreen(
+                        peerName: post.authorName,
+                        isStranger: true,
+                      ),
+                    ),
+                  );
+                },
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.bookmark_outline_rounded,
-                  color: Color(0xFF5584C3),
+                leading: Icon(
+                  post.isBookmarked
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_outline_rounded,
+                  color: const Color(0xFF5584C3),
                 ),
                 title: Text(
-                  'Simpan Postingan',
+                  post.isBookmarked
+                      ? 'Hapus dari Simpanan'
+                      : 'Simpan Postingan',
                   style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
                 ),
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  final saved = _dataController.toggleBookmarkPost(post.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        saved
+                            ? 'Postingan disimpan ke Profil'
+                            : 'Postingan dihapus dari simpanan',
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(
@@ -284,7 +200,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.redAccent,
                   ),
                 ),
-                onTap: () => Navigator.pop(context),
+                onTap: () async {
+                  Navigator.pop(sheetCtx);
+                  await _dataController.submitIncidentReport(
+                    accusedName: post.authorName,
+                    category: 'Pelanggaran Diskusi',
+                    description: post.title,
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Laporan dikirim ke moderator Hi!Gavi'),
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -478,10 +409,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 18,
-                    backgroundColor: Color(0xFFE2E8F0),
-                    backgroundImage: AssetImage('assets/images/userLogo.png'),
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    backgroundImage: AssetImage(_dataController.currentAvatar),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -588,32 +519,58 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: const Color(0xFFCBD5E1),
-                      backgroundImage: AssetImage(post.authorAvatar),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => ProfileScreen(
+                              peerName: post.authorName,
+                              isStranger: true,
+                            ),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: const Color(0xFFCBD5E1),
+                        backgroundImage: AssetImage(post.authorAvatar),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Row(
-                        children: [
-                          Text(
-                            post.authorName,
-                            style: GoogleFonts.manrope(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (_) => ProfileScreen(
+                                peerName: post.authorName,
+                                isStranger: true,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '• ${post.timeAgo}',
-                            style: GoogleFonts.manrope(
-                              fontSize: 11,
-                              color: const Color(0xFF94A3B8),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Text(
+                              post.authorName,
+                              style: GoogleFonts.manrope(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1E293B),
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Text(
+                              '• ${post.timeAgo}',
+                              style: GoogleFonts.manrope(
+                                fontSize: 11,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     IconButton(
@@ -688,21 +645,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 if (post.imageAttachment != null) ...[
                   const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      post.imageAttachment!,
-                      height: 150,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 120,
-                        color: const Color(0xFFF1F5F9),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.image_outlined,
-                          color: Color(0xFF94A3B8),
-                          size: 36,
+                  GestureDetector(
+                    onTap: () => _navigateToDetail(post),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        post.imageAttachment!,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 120,
+                          color: const Color(0xFFF1F5F9),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.image_outlined,
+                            color: Color(0xFF94A3B8),
+                            size: 36,
+                          ),
                         ),
                       ),
                     ),
@@ -777,6 +737,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _dataController.toggleBookmarkPost(post.id);
+                      },
+                      child: Icon(
+                        post.isBookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        size: 18,
+                        color: post.isBookmarked
+                            ? const Color(0xFF5A7FBA)
+                            : const Color(0xFF94A3B8),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -822,7 +799,9 @@ class _HomeScreenState extends State<HomeScreen> {
     HapticFeedback.selectionClick();
     Navigator.push(
       context,
-      CupertinoPageRoute(builder: (context) => const DetailPostScreen()),
+      CupertinoPageRoute(
+        builder: (context) => DetailPostScreen(post: post),
+      ),
     );
   }
 }

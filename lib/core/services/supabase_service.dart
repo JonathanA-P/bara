@@ -21,9 +21,9 @@ class SupabaseService {
     }
   }
 
-  /// Initialize Supabase using values from .env.
-  /// Falls back safely if keys are absent or invalid.
+  /// Initialize Supabase strictly from `.env` (never hardcode keys in source code).
   Future<void> initialize() async {
+    if (_isInitialized) return;
     try {
       String url = '';
       String anonKey = '';
@@ -54,12 +54,16 @@ class SupabaseService {
           anonKey: anonKey,
         );
         _isInitialized = true;
-        debugPrint('[BARA Supabase] Connected successfully to $url');
+        debugPrint('[Hi!Gavi Supabase] Connected successfully to $url');
       } else {
-        debugPrint('[BARA Supabase] Credentials not provided or empty in .env. Running in offline/mock mode.');
+        debugPrint(
+          '[Hi!Gavi Supabase] .env not found or empty. Running in hybrid local mode.',
+        );
       }
     } catch (e) {
-      debugPrint('[BARA Supabase] Init error: $e. Running in offline/mock mode.');
+      debugPrint(
+        '[Hi!Gavi Supabase] Init error: $e. Running in hybrid local mode.',
+      );
       _isInitialized = false;
     }
   }

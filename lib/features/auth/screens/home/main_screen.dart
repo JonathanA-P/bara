@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/services/app_data_controller.dart';
 import 'home_screen.dart';
 import '../course/course_screen.dart';
 import '../profile/profile_screen.dart';
@@ -17,6 +18,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   int _previousIndex = 0;
+  final AppDataController _dataController = AppDataController.instance;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -25,6 +27,22 @@ class _MainScreenState extends State<MainScreen> {
     NotificationChatScreen(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _dataController.addListener(_onDataUpdated);
+  }
+
+  void _onDataUpdated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _dataController.removeListener(_onDataUpdated);
+    super.dispose();
+  }
 
   void _onSelectTab(int index) {
     if (_currentIndex == index) return;
@@ -39,6 +57,8 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     const Color activeBlue = Color(0xFF5A7FBA);
     const Color inactiveGrey = Color(0xFF94A3B8);
+    final bool hasUnread =
+        _dataController.totalUnreadChatsCount > 0 && _currentIndex != 3;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -147,7 +167,7 @@ class _MainScreenState extends State<MainScreen> {
                         top: -2,
                         right: -3,
                         child: AnimatedScale(
-                          scale: _currentIndex == 3 ? 0.0 : 1.0,
+                          scale: hasUnread ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOutBack,
                           child: Container(
@@ -250,18 +270,21 @@ class _BouncingNavItemState extends State<_BouncingNavItem>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
         if (widget.isSelected) {
           _bounceController.forward(from: 0.0);
         }
-        widget.onTap();
       },
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: widget.child,
+      onTap: widget.onTap,
+      child: SizedBox(
+        width: 56,
+        height: 54,
+        child: Center(
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: widget.child,
+          ),
         ),
       ),
     );

@@ -1,10 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'core/config/app_routes.dart';
+import 'core/services/app_data_controller.dart';
+import 'core/services/supabase_service.dart';
 import 'features/auth/screens/splash_screen/splash_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.instance.initialize();
+  await AppDataController.instance.initialize();
   runApp(const MyApp());
 }
 

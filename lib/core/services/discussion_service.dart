@@ -4,28 +4,18 @@ import 'supabase_service.dart';
 class DiscussionService {
   final SupabaseService _service;
 
-  DiscussionService({SupabaseService? service}) : _service = service ?? SupabaseService.instance;
+  DiscussionService({SupabaseService? service})
+      : _service = service ?? SupabaseService.instance;
 
   SupabaseClient? get _client => _service.client;
 
   Future<List<Map<String, dynamic>>> getDiscussions({String? tag}) async {
     final client = _client;
-    if (client == null) {
-      // Fallback demo discussions if client not initialized
-      return [
-        {
-          'id': '1',
-          'title': 'Bingung perbedaan implementasi Dijkstra vs A* Search di Python',
-          'content': 'Halo teman-teman FILKOM, ada yang paham kapan A* lebih optimal daripada Dijkstra biasa untuk pathfinding labirin?',
-          'tag': 'Struktur Data & Algoritma',
-          'likes_count': 12,
-          'replies_count': 4,
-          'profiles': {'full_name': 'Ahmad Fauzi', 'major': 'Teknik Informatika'}
-        },
-      ];
-    }
+    if (client == null) return [];
 
-    var query = client.from('discussions').select('*, profiles(full_name, major, avatar_url)');
+    var query = client
+        .from('discussions')
+        .select('*, profiles(id, full_name, email, major, avatar_url)');
     if (tag != null && tag != 'Semua' && tag != 'For You') {
       query = query.eq('tag', tag);
     }
@@ -34,30 +24,64 @@ class DiscussionService {
     return List<Map<String, dynamic>>.from(response);
   }
 
+  Future<Set<String>> getUserBookmarkedIds({String? userId}) async {
+    final client = _client;
+    final uid = userId ?? _service.currentUserId;
+    if (client == null || uid == null) return {};
+
+    final response = await client
+        .from('bookmarks')
+        .select('discussion_id')
+        .eq('user_id', uid);
+
+    return List<Map<String, dynamic>>.from(response)
+        .map((r) => r['discussion_id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+  }
+
   Future<Map<String, dynamic>?> createDiscussion({
     required String title,
     required String content,
     required String tag,
+    String? authorIdOverride,
     int liveDurationMinutes = 0,
   }) async {
     final client = _client;
-    final userId = _service.currentUserId;
+    final userId = authorIdOverride ?? _service.currentUserId;
     if (client == null || userId == null) return null;
 
-    final response = await client.from('discussions').insert({
-      'author_id': userId,
-      'title': title,
-      'content': content,
-      'tag': tag,
-      'live_duration_minutes': liveDurationMinutes,
-    }).select().single();
+    final response = await client
+        .from('discussions')
+        .insert({
+          'author_id': userId,
+          'title': title,
+          'content': content,
+          'tag': tag,
+          'live_duration_minutes': liveDurationMinutes,
+        })
+        .select('*, profiles(id, full_name, email, major, avatar_url)')
+        .single();
 
     return response;
   }
 
-  Future<void> toggleBookmark(String discussionId) async {
+  Future<void> updateLikesCount({
+    required String discussionId,
+    required int likesCount,
+  }) async {
     final client = _client;
-    final userId = _service.currentUserId;
+    if (client == null) return;
+
+    await client
+        .from('discussions')
+        .update({'likes_count': likesCount})
+        .eq('id', discussionId);
+  }
+
+  Future<void> toggleBookmark(String discussionId, {String? userIdOverride}) async {
+    final client = _client;
+    final userId = userIdOverride ?? _service.currentUserId;
     if (client == null || userId == null) return;
 
     final exists = await client
@@ -87,26 +111,40 @@ class DiscussionService {
 
     final response = await client
         .from('discussion_comments')
-        .select('*, profiles(full_name, major, avatar_url)')
+        .select('*, profiles(id, full_name, major, avatar_url)')
         .eq('discussion_id', discussionId)
         .order('created_at', ascending: true);
 
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> addComment({
+  Future<Map<String, dynamic>?> addComment({
     required String discussionId,
     required String commentText,
+    String? authorIdOverride,
+    int? updatedRepliesCount,
   }) async {
     final client = _client;
-    final userId = _service.currentUserId;
-    if (client == null || userId == null) return;
+    final userId = authorIdOverride ?? _service.currentUserId;
+    if (client == null || userId == null) return null;
 
-    await client.from('discussion_comments').insert({
-      'discussion_id': discussionId,
-      'author_id': userId,
-      'comment_text': commentText,
-    });
+    final inserted = await client
+        .from('discussion_comments')
+        .insert({
+          'discussion_id': discussionId,
+          'author_id': userId,
+          'comment_text': commentText,
+        })
+        .select('*, profiles(id, full_name, major, avatar_url)')
+        .single();
+
+    if (updatedRepliesCount != null) {
+      await client
+          .from('discussions')
+          .update({'replies_count': updatedRepliesCount})
+          .eq('id', discussionId);
+    }
+
+    return inserted;
   }
 }
-

@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'course_rating_screen.dart';
+import '../../../../core/services/app_data_controller.dart';
 import 'add_course_rating_screen.dart';
+import 'course_rating_screen.dart';
 
 typedef RpsData = Map<String, String>;
 
@@ -13,34 +15,48 @@ class CourseDetailScreen extends StatefulWidget {
   final double rating;
 
   const CourseDetailScreen({
-    Key? key,
+    super.key,
     this.code = 'IF2123',
     this.title = 'Algoritma &\nPemrograman',
     this.category = 'MATA KULIAH WAJIB',
     this.sks = 4,
     this.semester = 3,
     this.rating = 4.2,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
+  final AppDataController _dataController = AppDataController.instance;
   bool _isRpsExpanded = false;
 
-  final List<RpsData> _rpsList = [
-    {'title': 'Tipe Data & Variabel', 'subtitle': 'Minggu 1'},
-    {'title': 'Tipe Data & Variabel', 'subtitle': 'Minggu 2'},
-    {'title': 'Tipe Data & Variabel', 'subtitle': 'Minggu 3'},
-    {'title': 'Pengkondisian & Loop', 'subtitle': 'Minggu 4'},
-    {'title': 'Function & Method', 'subtitle': 'Minggu 5'},
-    {'title': 'Array & List', 'subtitle': 'Minggu 6'},
-  ];
+  CourseModel get _course =>
+      _dataController.getCourseByCode(widget.code, fallbackTitle: widget.title);
+
+  @override
+  void initState() {
+    super.initState();
+    _dataController.addListener(_onDataUpdated);
+  }
+
+  void _onDataUpdated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _dataController.removeListener(_onDataUpdated);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final displayedRps = _isRpsExpanded ? _rpsList : _rpsList.take(3).toList();
+    final course = _course;
+    final rpsList = course.rpsList;
+    final displayedRps =
+        _isRpsExpanded ? rpsList : rpsList.take(3).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -76,27 +92,24 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Banner Biru Tanpa Rounded di Bawah & Maskot Lebih Besar
-            _buildHeaderBanner(),
-
-            // Konten Utama
+            _buildHeaderBanner(course),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildFloatingCourseCard(),
+                  _buildFloatingCourseCard(course),
                   const SizedBox(height: 20),
-                  _buildCourseStats(),
+                  _buildCourseStats(course),
                   const SizedBox(height: 24),
-                  _buildRpsSection(displayedRps),
+                  _buildRpsSection(displayedRps, rpsList.length),
                   const SizedBox(height: 24),
-                  _buildPrerequisiteSection(),
+                  _buildPrerequisiteSection(course),
                   const SizedBox(height: 24),
-                  _buildLecturerHistorySection(),
+                  _buildLecturerHistorySection(course),
                   const SizedBox(height: 24),
-                  _buildRatingCard(),
+                  _buildRatingCard(course),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -107,12 +120,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildHeaderBanner() {
+  Widget _buildHeaderBanner(CourseModel course) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Color(0xFF2B6CB0),
-        // Tanpa BorderRadius di bawah (siku/lurus rata)
       ),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
       child: Stack(
@@ -131,7 +143,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  widget.category,
+                  'MATA KULIAH ${course.badgeText.toUpperCase()}',
                   style: const TextStyle(
                     color: Color(0xFF065F46),
                     fontSize: 10,
@@ -141,7 +153,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                widget.code,
+                course.code,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
@@ -152,7 +164,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               SizedBox(
                 width: 210,
                 child: Text(
-                  widget.title,
+                  course.title,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -162,11 +174,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const SizedBox(
+              SizedBox(
                 width: 220,
                 child: Text(
-                  'Fondasi pemecahan masalah komputasional dengan algoritma yang efektif.',
-                  style: TextStyle(
+                  course.description,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 11,
                     height: 1.3,
@@ -180,7 +192,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             top: -15,
             child: Image.asset(
               'assets/images/bara_naik_pesawat.png',
-              width: 175, // Diperbesar agar pas seperti di Figma
+              width: 175,
               height: 175,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
@@ -193,7 +205,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildFloatingCourseCard() {
+  Widget _buildFloatingCourseCard(CourseModel course) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -203,7 +215,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -225,49 +237,56 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.code,
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.code,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                widget.title.replaceAll('\n', ' '),
-                style: const TextStyle(
-                  color: Color(0xFF1E293B),
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 2),
+                Text(
+                  course.title.replaceAll('\n', ' '),
+                  style: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCourseStats() {
+  Widget _buildCourseStats(CourseModel course) {
     return Row(
       children: [
         Expanded(
-          child: _buildStatItem('SKS', '${widget.sks} SKS', isPrimary: true),
+          child: _buildStatItem('SKS', '${course.sks} SKS', isPrimary: true),
         ),
         Expanded(
-          child: _buildStatItem('Semester', '${widget.semester}', isPrimary: true),
+          child: _buildStatItem(
+            'Semester',
+            '${course.semester}',
+            isPrimary: true,
+          ),
         ),
         Expanded(
           child: InkWell(
             onTap: () {
               CourseRatingScreen.showPreviewBottomSheet(
                 context,
-                rating: widget.rating,
-                totalRating: 48,
+                courseCode: course.code,
+                rating: course.rating,
+                totalRating: course.totalRatings,
               );
             },
             borderRadius: BorderRadius.circular(8),
@@ -298,7 +317,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${widget.rating}',
+                      '${course.rating}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -308,9 +327,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  '48 rating',
-                  style: TextStyle(
+                Text(
+                  '${course.totalRatings} rating',
+                  style: const TextStyle(
                     color: Color(0xFF94A3B8),
                     fontSize: 10,
                   ),
@@ -350,7 +369,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildRpsSection(List<RpsData> displayedRps) {
+  Widget _buildRpsSection(List<RpsData> displayedRps, int totalCount) {
     return Column(
       children: [
         Row(
@@ -364,21 +383,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 color: Color(0xFF2D3748),
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isRpsExpanded = !_isRpsExpanded;
-                });
-              },
-              child: Text(
-                _isRpsExpanded ? 'Sembunyikan' : 'Lihat semua',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF3182CE),
-                  fontWeight: FontWeight.w600,
+            if (totalCount > 3)
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isRpsExpanded = !_isRpsExpanded;
+                  });
+                },
+                child: Text(
+                  _isRpsExpanded ? 'Sembunyikan' : 'Lihat semua',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF3182CE),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -391,53 +411,53 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              ...displayedRps
-                  .map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF63B3ED).withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.article_outlined,
-                              color: Color(0xFF2B6CB0),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['title']!,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2B6CB0),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item['subtitle']!,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+              ...displayedRps.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF63B3ED).withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.article_outlined,
+                          color: Color(0xFF2B6CB0),
+                          size: 20,
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(),
-              if (!_isRpsExpanded)
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title']!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2B6CB0),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item['subtitle']!,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!_isRpsExpanded && totalCount > 3)
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
@@ -455,14 +475,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildPrerequisiteSection() {
+  Widget _buildPrerequisiteSection(CourseModel course) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: const [
-        Text('Prasyarat', style: TextStyle(color: Colors.grey, fontSize: 12)),
+      children: [
+        const Text(
+          'Prasyarat',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
         Text(
-          'Dasar Pemrograman',
-          style: TextStyle(
+          course.prerequisite,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 12,
             color: Color(0xFF2D3748),
@@ -472,7 +495,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildLecturerHistorySection() {
+  Widget _buildLecturerHistorySection(CourseModel course) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -485,11 +508,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildLecturerItem('Dr. Budi Santoso, S.Kom., M.T.', 0.84, '84%'),
-        const SizedBox(height: 12),
-        _buildLecturerItem('Nadia Prameswari, M.Cs.', 0.68, '68%'),
-        const SizedBox(height: 12),
-        _buildLecturerItem('Rizky Mahendra, M.Kom.', 0.42, '42%'),
+        ...course.lecturers.map(
+          (l) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildLecturerItem(
+              (l['name'] as String?) ?? 'Dosen Pengajar',
+              ((l['progress'] ?? l['prob'] ?? 0.5) as num).toDouble(),
+              (l['percentage'] ?? l['pct'] ?? '50%') as String,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -534,7 +562,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildRatingCard() {
+  Widget _buildRatingCard(CourseModel course) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -588,8 +616,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddCourseRatingScreen(),
+                  CupertinoPageRoute(
+                    builder: (context) => AddCourseRatingScreen(
+                      courseCode: course.code,
+                    ),
                   ),
                 );
               },

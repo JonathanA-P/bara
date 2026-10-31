@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../../core/services/auth_service.dart';
 import 'email_verification_screen.dart';
 
 /// Fase 4 - Account info (username, email, password, confirm password)
@@ -20,6 +23,21 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
   bool _isObscurePassword = true;
   bool _isObscureConfirm = true;
   bool _agreedToTerms = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final ctrl = AppDataController.instance;
+    if (ctrl.pendingRegEmail.isNotEmpty) {
+      _emailController.text = ctrl.pendingRegEmail;
+    }
+    if (ctrl.pendingRegName.isNotEmpty) {
+      _usernameController.text = ctrl.pendingRegName
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
+    }
+  }
 
   @override
   void dispose() {
@@ -30,9 +48,110 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
     super.dispose();
   }
 
+  Future<void> _handleRegister() async {
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap isi semua kolom pendaftaran.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Password minimal 8 karakter.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Konfirmasi password tidak cocok.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap setujui Syarat & Ketentuan serta Kebijakan Privasi Hi!Gavi.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final ctrl = AppDataController.instance;
+    final fullName =
+        ctrl.pendingRegName.isNotEmpty ? ctrl.pendingRegName : username;
+    final nim =
+        ctrl.pendingRegNim.isNotEmpty ? ctrl.pendingRegNim : '235150200111001';
+    final major = ctrl.pendingRegProdi;
+
+    try {
+      await AuthService().signUp(
+        email: email,
+        password: password,
+        fullName: fullName,
+        nim: nim,
+        major: major,
+      );
+    } catch (_) {}
+
+    await ctrl.registerNewAccount(
+      fullName: fullName,
+      username: username,
+      email: email,
+      nim: nim,
+      major: major,
+    );
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => EmailVerificationScreen(
+            email: email,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF1B3A5C);
     const Color buttonBlue = Color(0xFF2D5F8A);
     const Color fieldBorder = Color(0xFFCBD5E1);
     const Color textDark = Color(0xFF1E293B);
@@ -157,7 +276,7 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      side: BorderSide(
+                      side: const BorderSide(
                         color: fieldBorder,
                         width: 1.5,
                       ),
@@ -177,8 +296,11 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                           color: textMuted,
                           height: 1.4,
                         ),
-                        children: [
-                          const TextSpan(text: 'Minimal 8 karakter '),
+                        children: const [
+                          TextSpan(
+                            text:
+                                'Saya menyetujui Ketentuan Layanan & Kebijakan Privasi Hi!Gavi',
+                          ),
                         ],
                       ),
                     ),
@@ -192,18 +314,7 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EmailVerificationScreen(
-                          email: _emailController.text.isNotEmpty
-                              ? _emailController.text
-                              : 'nadia@kampus.ac.id',
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,
                     elevation: 0,
@@ -211,14 +322,23 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
-                    'Daftar Sekarang',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          'Daftar Sekarang',
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -359,4 +479,3 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
     );
   }
 }
-

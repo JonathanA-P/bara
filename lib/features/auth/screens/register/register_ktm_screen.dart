@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../chat/screens/camera_screen.dart';
 import 'register_form_screen.dart';
 import '../login/login_screen.dart';
 
@@ -89,7 +92,7 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                       color: const Color(0xFFDBEAFE),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.person_outline,
                       color: primaryBlue,
                       size: 22,
@@ -100,7 +103,7 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Unggah Foto Profil',
+                        'Unggah Foto Profil / KTM',
                         style: GoogleFonts.manrope(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -122,48 +125,87 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
               const SizedBox(height: 24),
 
               // KTM Preview card
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: primaryBlue,
-                  borderRadius: BorderRadius.circular(16),
-                  image: _selectedImagePath != null
-                      ? DecorationImage(
-                          image: AssetImage(_selectedImagePath!),
-                          fit: BoxFit.cover,
+              GestureDetector(
+                onTap: () => _showKtmSourcePicker(context),
+                child: Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: primaryBlue,
+                    borderRadius: BorderRadius.circular(16),
+                    image: _selectedImagePath != null
+                        ? DecorationImage(
+                            image: AssetImage(_selectedImagePath!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _selectedImagePath == null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.credit_card,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                size: 48,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Preview KTM',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
                         )
-                      : null,
-                ),
-                child: _selectedImagePath == null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      : Stack(
                           children: [
-                            Icon(
-                              Icons.credit_card,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              size: 48,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Preview KTM',
-                              style: GoogleFonts.manrope(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.7),
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF16A34A),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.verified_rounded,
+                                      color: Colors.white,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'KTM Terdeteksi • +4 Karma',
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      )
-                    : null,
+                ),
               ),
               const SizedBox(height: 16),
 
               // Info text
               Text(
-                'Scan KT untuk dapat 1-4 "Karma untuk melakukan pendaftaran',
+                'Scan KTM untuk dapat +4 Karma dan verifikasi otomatis identitas mahasiswa.',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
@@ -179,7 +221,6 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Open camera/file picker for KTM
                     _showKtmSourcePicker(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -190,7 +231,7 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                     ),
                   ),
                   child: Text(
-                    'Scan KTM',
+                    _selectedImagePath == null ? 'Scan KTM' : 'Ubah Foto KTM',
                     style: GoogleFonts.manrope(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -208,13 +249,13 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                   Container(
                     width: 28,
                     height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE8F5E9),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.verified_user_outlined,
-                      color: const Color(0xFF4CAF50),
+                      color: Color(0xFF4CAF50),
                       size: 16,
                     ),
                   ),
@@ -250,9 +291,11 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
+                    AppDataController.instance.pendingKtmImage =
+                        _selectedImagePath;
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      CupertinoPageRoute(
                         builder: (context) => const RegisterFormScreen(),
                       ),
                     );
@@ -293,7 +336,7 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
                       onTap: () {
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(
+                          CupertinoPageRoute(
                             builder: (context) => const LoginScreen(),
                           ),
                           (route) => false,
@@ -356,72 +399,86 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
   void _showKtmSourcePicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 24),
                 Text(
-                  'Pilih sumber KTM',
+                  'Pilih Sumber Foto KTM',
                   style: GoogleFonts.manrope(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _sourceButton(
-                        icon: Icons.camera_alt_outlined,
-                        label: 'Kamera',
-                        onTap: () {
-                          Navigator.pop(context);
-                          // Camera logic
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _sourceButton(
-                        icon: Icons.photo_library_outlined,
-                        label: 'Galeri',
-                        onTap: () {
-                          Navigator.pop(context);
-                          // Gallery logic
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _sourceButton(
-                        icon: Icons.insert_drive_file_outlined,
-                        label: 'File',
-                        onTap: () {
-                          Navigator.pop(context);
-                          // File picker logic
-                        },
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDBEAFE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_outlined,
+                      color: Color(0xFF2D5F8A),
+                    ),
+                  ),
+                  title: Text(
+                    'Kamera (Scan KTM)',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final captured = await Navigator.push<String>(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const CameraScreen()),
+                    );
+                    if (captured != null && mounted) {
+                      setState(() {
+                        _selectedImagePath = captured;
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDBEAFE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.photo_library_outlined,
+                      color: Color(0xFF2D5F8A),
+                    ),
+                  ),
+                  title: Text(
+                    'Pilih dari Galeri',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _selectedImagePath = 'assets/images/CloudArt_margin.png';
+                    });
+                  },
+                ),
               ],
             ),
           ),
@@ -429,37 +486,4 @@ class _RegisterKtmScreenState extends State<RegisterKtmScreen> {
       },
     );
   }
-
-  Widget _sourceButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 28, color: const Color(0xFF5382C1)),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.manrope(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF334155),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
-

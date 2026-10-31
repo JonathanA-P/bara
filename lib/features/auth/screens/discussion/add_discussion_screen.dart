@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../chat/screens/camera_screen.dart';
 import '../home/models/post_model.dart';
 
 class AddDiscussionScreen extends StatefulWidget {
@@ -19,6 +22,8 @@ class AddDiscussionScreen extends StatefulWidget {
 }
 
 class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
+  final AppDataController _dataController = AppDataController.instance;
+
   // Mode flag: false = Kelas (Topik mata kuliah), true = Luar Kelas (Topik luar kelas)
   late bool _isLuarKelas;
 
@@ -121,6 +126,7 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
   void initState() {
     super.initState();
     _isLuarKelas = widget.initialTab == PostCategoryTab.luarKelas;
+    _selectedProdi = _dataController.currentMajor;
 
     _matkulSearchController.addListener(() {
       setState(() {});
@@ -168,27 +174,29 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
     });
   }
 
-  void _handlePickPhoto() {
-    setState(() {
-      if (_attachedImage == null) {
-        _attachedImage = 'assets/images/CloudArt_margin.png';
-      } else {
-        _attachedImage = null;
-      }
-    });
+  Future<void> _handlePickPhoto() async {
+    final result = await Navigator.push<String>(
+      context,
+      CupertinoPageRoute(builder: (_) => const CameraScreen()),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _attachedImage = result;
+      });
+    }
   }
 
   void _handlePickFile() {
     setState(() {
       if (_attachedFileName == null) {
-        _attachedFileName = 'Modul_Kuliah.pdf (1.2 MB)';
+        _attachedFileName = 'Modul_Kuliah_FILKOM.pdf (1.2 MB)';
       } else {
         _attachedFileName = null;
       }
     });
   }
 
-  void _handleSubmitPost() {
+  Future<void> _handleSubmitPost() async {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
 
@@ -216,9 +224,9 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
 
     // Build PostBadge list
     final List<PostBadge> badges = [];
+    String tagLabel = 'UMUM';
 
     if (!_isLuarKelas) {
-      // Topik Mata Kuliah badges
       badges.add(
         PostBadge(
           label: _selectedProdi.toUpperCase(),
@@ -231,6 +239,7 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
           (_matkulSearchController.text.trim().isNotEmpty
               ? _matkulSearchController.text.trim()
               : 'MATAKULIAH');
+      tagLabel = matkulLabel;
 
       badges.add(
         PostBadge(
@@ -240,10 +249,10 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
         ),
       );
     } else {
-      // Topik Luar Kelas badge
       final topicLabel = _topicController.text.trim().isNotEmpty
           ? _topicController.text.trim()
           : 'LUAR KELAS';
+      tagLabel = topicLabel;
 
       badges.add(
         PostBadge(
@@ -254,25 +263,18 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
       );
     }
 
-    final newPost = PostModel(
-      id: 'post_${DateTime.now().millisecondsSinceEpoch}',
-      authorName: 'Nadia Aulia',
-      authorAvatar: 'assets/images/userLogo.png',
-      timeAgo: 'Baru saja',
-      userRole: _isLuarKelas
-          ? 'HiGavi Community Enthusiast'
-          : '$_selectedProdi • Angkatan 2023',
-      tab: _isLuarKelas ? PostCategoryTab.luarKelas : PostCategoryTab.kuliah,
-      badges: badges,
+    final newPost = await _dataController.createNewPost(
       title: title,
       content: content,
+      tab: _isLuarKelas ? PostCategoryTab.luarKelas : PostCategoryTab.kuliah,
+      badges: badges,
+      tagLabel: tagLabel,
       imageAttachment: _attachedImage,
       fileAttachment: _attachedFileName,
       fileSize: _attachedFileName != null ? '1.2 MB' : null,
-      likesCount: 0,
-      commentsCount: 0,
     );
 
+    if (!mounted) return;
     widget.onPostCreated?.call(newPost);
 
     if (Navigator.canPop(context)) {
@@ -285,7 +287,6 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      // Clear fields
       setState(() {
         _titleController.clear();
         _contentController.clear();
@@ -367,18 +368,18 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
                     // USER PROFILE ROW
                     Row(
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 22,
-                          backgroundColor: Color(0xFFE2E8F0),
+                          backgroundColor: const Color(0xFFE2E8F0),
                           backgroundImage:
-                              AssetImage('assets/images/userLogo.png'),
+                              AssetImage(_dataController.currentAvatar),
                         ),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Nadia Aulia',
+                              _dataController.currentName,
                               style: GoogleFonts.manrope(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -387,7 +388,7 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '@nadiaulia',
+                              _dataController.currentUsername,
                               style: GoogleFonts.manrope(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -630,7 +631,7 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
                 ),
               ),
 
-              // Expanded Options List (As shown in screenshot 2 left)
+              // Expanded Options List
               if (_isProdiOpen) ...[
                 const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
                 ListView.separated(
@@ -772,7 +773,7 @@ class _AddDiscussionScreenState extends State<AddDiscussionScreen> {
                 ),
               ),
 
-              // Expanded Suggestions List (As shown in screenshot 2 right)
+              // Expanded Suggestions List
               if (_isMatkulOpen) ...[
                 const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
                 ConstrainedBox(

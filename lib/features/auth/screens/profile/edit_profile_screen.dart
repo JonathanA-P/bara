@@ -1,5 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../chat/screens/camera_screen.dart';
 import '../login/login_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -24,8 +28,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _usernameController;
   late final TextEditingController _bioController;
+  final AppDataController _dataController = AppDataController.instance;
 
   late String _selectedMajor;
+  late String _avatarAsset;
+  String _coverAsset = 'assets/images/CloudArt_margin.png';
 
   final List<String> _majors = const [
     'Teknik Informatika',
@@ -42,6 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _usernameController = TextEditingController(text: widget.initialUsername);
     _bioController = TextEditingController(text: widget.initialBio);
     _selectedMajor = widget.initialMajor;
+    _avatarAsset = _dataController.currentAvatar;
   }
 
   @override
@@ -50,6 +58,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _usernameController.dispose();
     _bioController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatarFromCamera() async {
+    final result = await Navigator.push<String>(
+      context,
+      CupertinoPageRoute(builder: (_) => const CameraScreen()),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _avatarAsset = result;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto profil berhasil diperbarui'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickCoverFromCamera() async {
+    final result = await Navigator.push<String>(
+      context,
+      CupertinoPageRoute(builder: (_) => const CameraScreen()),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _coverAsset = result;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto sampul berhasil diperbarui'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showDeleteAccountDialog() {
@@ -174,10 +220,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: isFilled
-                                ? () {
+                                ? () async {
                                     Navigator.pop(ctx);
+                                    await _dataController.logoutUser();
+                                    if (!this.context.mounted) return;
                                     Navigator.pushAndRemoveUntil(
-                                      context,
+                                      this.context,
                                       MaterialPageRoute(
                                         builder: (_) => const LoginScreen(),
                                       ),
@@ -277,12 +325,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
+    HapticFeedback.lightImpact();
+    final name = _nameController.text.trim();
+    final username = _usernameController.text.trim();
+    final bio = _bioController.text.trim();
+
+    await _dataController.updateCurrentProfile(
+      name: name.isNotEmpty ? name : widget.initialName,
+      username: username.isNotEmpty ? username : widget.initialUsername,
+      major: _selectedMajor,
+      bio: bio,
+      avatar: _avatarAsset,
+    );
+
+    if (!mounted) return;
     Navigator.pop(context, {
-      'name': _nameController.text.trim(),
-      'username': _usernameController.text.trim(),
-      'major': _selectedMajor,
-      'bio': _bioController.text.trim(),
+      'name': _dataController.currentName,
+      'username': _dataController.currentUsername.replaceFirst('@', ''),
+      'major': _dataController.currentMajor,
+      'bio': _dataController.currentBio,
+      'avatar': _dataController.currentAvatar,
     });
   }
 
@@ -333,8 +396,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/CloudArt_margin.png'),
+                        image: DecorationImage(
+                          image: AssetImage(_coverAsset),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -344,15 +407,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       right: 12,
                       bottom: 0,
                       child: GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ubah Foto Sampul'),
-                              duration: Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                        onTap: _pickCoverFromCamera,
                         child: Container(
                           width: 38,
                           height: 38,
@@ -391,24 +446,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         radius: 38,
-                        backgroundColor: Color(0xFFCBD5E1),
-                        backgroundImage:
-                            AssetImage('assets/images/userLogo.png'),
+                        backgroundColor: const Color(0xFFCBD5E1),
+                        backgroundImage: AssetImage(_avatarAsset),
                       ),
                     ),
                     const SizedBox(height: 10),
                     GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Ubah Foto Profil'),
-                            duration: Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+                      onTap: _pickAvatarFromCamera,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,

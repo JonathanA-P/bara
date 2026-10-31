@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/services/app_data_controller.dart';
+import '../../auth/screens/profile/profile_screen.dart';
 import 'camera_screen.dart';
 
 typedef ChatMessageMap = Map<String, dynamic>;
@@ -13,8 +15,8 @@ class DirectChatScreen extends StatefulWidget {
 
   const DirectChatScreen({
     super.key,
-    this.peerName = 'Alex Chan',
-    this.lastSeen = 'Hari ini',
+    this.peerName = 'Alex Chen',
+    this.lastSeen = 'Online',
     this.avatarAsset = 'assets/images/userLogo.png',
   });
 
@@ -26,94 +28,91 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final AppDataController _dataController = AppDataController.instance;
 
   bool _isSearchingMessage = false;
   bool _showAttachmentMenu = false;
+  bool _isPeerTyping = false;
 
-  // Master list pesan sesuai frame Figma "Mulai Pesan" & "Cari Pesan"
-  final List<ChatMessageMap> _messages = [
-    {
-      'id': '1',
-      'text': 'Selamat pagi, salam sejahtera',
-      'time': '20.00',
-      'isMe': true,
-      'isFailed': false,
-      'isLiked': false,
-      'isNew': false,
-    },
-    {
-      'id': '2',
-      'text': 'Selamat pagi, salam sejahtera',
-      'time': '20.00',
-      'isMe': false,
-      'isFailed': false,
-      'isLiked': false,
-      'isNew': false,
-    },
-    {
-      'id': '3',
-      'text': 'Selamat pagi, salam sejahtera',
-      'time': '20.00',
-      'isMe': true,
-      'isFailed': true, // Mensimulasikan pesan gagal kirim dengan ikon merah reload
-      'isLiked': false,
-      'isNew': false,
-    },
-  ];
+  List<ChatMessageMap> get _messages =>
+      _dataController.getMessagesForPeer(widget.peerName);
 
   @override
   void initState() {
     super.initState();
+    _dataController.addListener(_onDataUpdated);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _dataController.markChatAsRead(widget.peerName);
+      await _dataController.loadMessagesForPeerFromDb(widget.peerName);
+      _scrollToBottom(animate: false);
+    });
     _searchController.addListener(() {
-      setState(() {});
+      if (mounted) setState(() {});
     });
     _messageController.addListener(() {
-      setState(() {});
+      if (mounted) setState(() {});
     });
+  }
+
+  void _onDataUpdated() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
+    _dataController.removeListener(_onDataUpdated);
     _messageController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _sendMessage() {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) return;
-
-    HapticFeedback.lightImpact();
-
-    final now = TimeOfDay.now();
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-
-    setState(() {
-      _messages.add({
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'text': text,
-        'time': '$hour.$minute',
-        'isMe': true,
-        'isFailed': false,
-        'isLiked': false,
-        'isNew': true,
-      });
-      _showAttachmentMenu = false;
-    });
-
-    _messageController.clear();
-
+  void _scrollToBottom({bool animate = true}) {
     Future.delayed(const Duration(milliseconds: 80), () {
-      if (_scrollController.hasClients) {
+      if (!mounted || !_scrollController.hasClients) return;
+      if (animate) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
         );
+      } else {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
+  }
+
+  Future<void> _sendMessage({
+    String? customText,
+    String? imagePath,
+    String? attachmentName,
+  }) async {
+    final text = (customText ?? _messageController.text).trim();
+    if (text.isEmpty && imagePath == null && attachmentName == null) return;
+
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _showAttachmentMenu = false;
+      _isPeerTyping = false;
+    });
+
+    if (customText == null) {
+      _messageController.clear();
+    }
+
+    await _dataController.sendDirectMessage(
+      peerName: widget.peerName,
+      text: text.isNotEmpty
+          ? text
+          : (imagePath != null ? 'Mengirim foto' : 'Mengirim dokumen'),
+      imagePath: imagePath,
+      attachmentName: attachmentName,
+    );
+
+    _scrollToBottom();
   }
 
   void _toggleBubbleReaction(ChatMessageMap msg) {
@@ -239,26 +238,104 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
   void _openCamera() async {
     setState(() => _showAttachmentMenu = false);
-    final result = await Navigator.push(
+    final result = await Navigator.push<String>(
       context,
       CupertinoPageRoute(builder: (_) => const CameraScreen()),
     );
-    if (result != null) {
-      final now = TimeOfDay.now();
-      final hour = now.hour.toString().padLeft(2, '0');
-      final minute = now.minute.toString().padLeft(2, '0');
-      setState(() {
-        _messages.add({
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'text': '[Foto dikirim]',
-          'time': '$hour.$minute',
-          'isMe': true,
-          'isFailed': false,
-          'isLiked': false,
-          'isNew': true,
-        });
-      });
+    if (result != null && mounted) {
+      await _sendMessage(
+        customText: 'Foto baru dikirim',
+        imagePath: result,
+      );
     }
+  }
+
+  void _pickDocumentSheet() {
+    setState(() => _showAttachmentMenu = false);
+    final docs = [
+      'Rangkuman_Materi_UTS_FILKOM.pdf',
+      'Catatan_Algoritma_Graf_BFS.pdf',
+      'Slide_Probabilitas_Statistika_Minggu4.pptx',
+      'Latihan_Soal_Kalkulus_Dasar.pdf',
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Kirim Dokumen Kuliah',
+                  style: GoogleFonts.manrope(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...docs.map(
+                  (doc) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0F2FE),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.description_outlined,
+                        color: Color(0xFF0284C7),
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      doc,
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.send_rounded,
+                      size: 18,
+                      color: Color(0xFF4C7BB8),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _sendMessage(
+                        customText: 'Berikut lampiran dokumennya ya:',
+                        attachmentName: doc,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   List<ChatMessageMap> get _displayedMessages {
@@ -345,6 +422,34 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
                       // List Pesan Bubble
                       ..._displayedMessages.map((msg) => _buildChatBubble(msg)),
+
+                      if (_isPeerTyping)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF8C9BAE),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  '${widget.peerName} sedang mengetik...',
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 11,
+                                    fontStyle: FontStyle.italic,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -373,38 +478,54 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: const Color(0xFFCBD5E1),
-            backgroundImage: AssetImage(widget.avatarAsset),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.peerName,
-                  style: GoogleFonts.manrope(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                Text(
-                  widget.lastSeen,
-                  style: GoogleFonts.manrope(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
+      title: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => ProfileScreen(
+                peerName: widget.peerName,
+                isStranger: true,
+              ),
             ),
-          ),
-        ],
+          );
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: const Color(0xFFCBD5E1),
+              backgroundImage: AssetImage(widget.avatarAsset),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.peerName,
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  Text(
+                    _isPeerTyping ? 'Sedang mengetik...' : widget.lastSeen,
+                    style: GoogleFonts.manrope(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: _isPeerTyping
+                          ? const Color(0xFF4C7BB8)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         IconButton(
@@ -487,6 +608,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     final bool isFailed = msg['isFailed'] ?? false;
     final bool isLiked = msg['isLiked'] ?? false;
     final bool isNew = msg['isNew'] ?? false;
+    final String? imagePath = msg['imagePath'] as String?;
+    final String? attachmentName = msg['attachmentName'] as String?;
 
     Widget bubbleRow = Padding(
       padding: EdgeInsets.only(bottom: isLiked ? 20 : 12),
@@ -518,13 +641,63 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        msg['text'],
-                        style: GoogleFonts.manrope(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          height: 1.35,
+                      if (imagePath != null) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            imagePath,
+                            width: 190,
+                            height: 140,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      if (attachmentName != null) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.insert_drive_file_outlined,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  attachmentName,
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          msg['text'],
+                          style: GoogleFonts.manrope(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            height: 1.35,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -666,31 +839,13 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                           _buildAttachmentOption(
                             Icons.description_outlined,
                             'Dokumen',
-                            () {
-                              setState(() => _showAttachmentMenu = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Pilih dokumen'),
-                                  duration: Duration(seconds: 1),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
+                            _pickDocumentSheet,
                           ),
                           const Divider(color: Colors.white24, height: 1),
                           _buildAttachmentOption(
                             Icons.photo_library_outlined,
                             'Foto & Video',
-                            () {
-                              setState(() => _showAttachmentMenu = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Pilih foto & video'),
-                                  duration: Duration(seconds: 1),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
+                            _openCamera,
                           ),
                           const Divider(color: Colors.white24, height: 1),
                           _buildAttachmentOption(
@@ -859,10 +1014,35 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 ),
               ),
               ListTile(
+                leading: const Icon(
+                  Icons.person_outline,
+                  color: Color(0xFF1E293B),
+                ),
+                title: Text(
+                  'Lihat Profil ${widget.peerName}',
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    this.context,
+                    CupertinoPageRoute(
+                      builder: (_) => ProfileScreen(
+                        peerName: widget.peerName,
+                        isStranger: true,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
                 leading:
                     const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
                 title: Text(
-                  'Hapus Pesan',
+                  'Bersihkan Riwayat Pesan',
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFFEF4444),
@@ -870,9 +1050,12 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  setState(() {
+                    _messages.clear();
+                  });
+                  ScaffoldMessenger.of(this.context).showSnackBar(
                     const SnackBar(
-                      content: Text('Riwayat pesan dihapus'),
+                      content: Text('Riwayat pesan dibersihkan'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -882,17 +1065,23 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 leading:
                     const Icon(Icons.report_outlined, color: Color(0xFFEF4444)),
                 title: Text(
-                  'Laporkan Pesan',
+                  'Laporkan Pengguna',
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFFEF4444),
                   ),
                 ),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  await _dataController.submitIncidentReport(
+                    accusedName: widget.peerName,
+                    category: 'Pelanggaran Pesan Langsung (DM)',
+                    description: 'Laporan percakapan DM dengan ${widget.peerName}',
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(this.context).showSnackBar(
                     const SnackBar(
-                      content: Text('Laporan pesan terkirim'),
+                      content: Text('Laporan berhasil dikirim ke tim moderator'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
