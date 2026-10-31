@@ -45,10 +45,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1E293B)),
+          icon: Image.asset(
+            'assets/images/tombol_back.png',
+            width: 24,
+            height: 24,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
+                Icons.arrow_back_ios_new,
+                color: Color(0xFF1E293B),
+              );
+            },
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
@@ -63,25 +73,35 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderBanner(),
-              const SizedBox(height: 20),
-              _buildCourseStats(),
-              const SizedBox(height: 24),
-              _buildRpsSection(displayedRps),
-              const SizedBox(height: 24),
-              _buildPrerequisiteSection(),
-              const SizedBox(height: 24),
-              _buildLecturerHistorySection(),
-              const SizedBox(height: 24),
-              _buildRatingCard(),
-              const SizedBox(height: 24),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Banner Biru Tanpa Rounded di Bawah & Maskot Lebih Besar
+            _buildHeaderBanner(),
+
+            // Konten Utama
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  _buildFloatingCourseCard(),
+                  const SizedBox(height: 20),
+                  _buildCourseStats(),
+                  const SizedBox(height: 24),
+                  _buildRpsSection(displayedRps),
+                  const SizedBox(height: 24),
+                  _buildPrerequisiteSection(),
+                  const SizedBox(height: 24),
+                  _buildLecturerHistorySection(),
+                  const SizedBox(height: 24),
+                  _buildRatingCard(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -90,12 +110,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _buildHeaderBanner() {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF2B6CB0),
-        borderRadius: BorderRadius.circular(16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF2B6CB0),
+        // Tanpa BorderRadius di bawah (siku/lurus rata)
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,13 +127,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  color: const Color(0xFFD1FAE5),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   widget.category,
                   style: const TextStyle(
-                    color: Color(0xFF2B6CB0),
+                    color: Color(0xFF065F46),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -129,7 +150,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(height: 4),
               SizedBox(
-                width: 200,
+                width: 210,
                 child: Text(
                   widget.title,
                   style: const TextStyle(
@@ -155,17 +176,76 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ],
           ),
           Positioned(
-            right: -10,
-            top: 10,
+            right: -20,
+            top: -15,
             child: Image.asset(
-              'assets/bara_naik_pesawat.png',
-              width: 110,
-              height: 110,
+              'assets/images/bara_naik_pesawat.png',
+              width: 175, // Diperbesar agar pas seperti di Figma
+              height: 175,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.image, size: 80, color: Colors.white54);
+                return const Icon(Icons.image, size: 90, color: Colors.white54);
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingCourseCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.book_outlined,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.code,
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.title.replaceAll('\n', ' '),
+                style: const TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -178,7 +258,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       children: [
         _buildStatItem('SKS', '${widget.sks} SKS', isPrimary: true),
         _buildStatItem('Semester', '${widget.semester}', isPrimary: true),
-        GestureDetector(
+        InkWell(
           onTap: () {
             CourseRatingScreen.showPreviewBottomSheet(
               context,
@@ -186,31 +266,35 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               totalRating: 48,
             );
           },
-          child: Column(
-            children: [
-              const Text(
-                'Kesulitan',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Text('🧠 ', style: TextStyle(fontSize: 14)),
-                  Text(
-                    '${widget.rating}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFED8936),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            child: Column(
+              children: [
+                const Text(
+                  'Kesulitan',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Text('🧠 ', style: TextStyle(fontSize: 14)),
+                    Text(
+                      '${widget.rating}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFED8936),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const Text(
-                '48 rating',
-                style: TextStyle(color: Colors.grey, fontSize: 10),
-              ),
-            ],
+                  ],
+                ),
+                const Text(
+                  '48 rating',
+                  style: TextStyle(color: Colors.grey, fontSize: 10),
+                ),
+              ],
+            ),
           ),
         ),
       ],
