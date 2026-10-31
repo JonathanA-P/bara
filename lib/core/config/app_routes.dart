@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../features/auth/screens/splash_screen/splash_screen.dart';
 import '../../features/auth/screens/onboarding/onboarding_screen.dart';
@@ -24,59 +25,49 @@ class AppRoutes {
   static const String main = '/main';
   static const String addDiscussion = '/add-discussion';
 
+  /// Smooth Instagram-like parallax slide + fade transition
+  static Route<T> smoothRoute<T>(Widget page, {RouteSettings? settings}) {
+    return CupertinoPageRoute<T>(
+      settings: settings,
+      builder: (_) => page,
+    );
+  }
+
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
-        return MaterialPageRoute(
-          builder: (_) => const SplashScreen(),
-        );
+        return smoothRoute(const SplashScreen(), settings: settings);
       case onboarding:
-        return MaterialPageRoute(
-          builder: (_) => const OnboardingScreen(),
-        );
+        return smoothRoute(const OnboardingScreen(), settings: settings);
       case login:
-        return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        );
+        return smoothRoute(const LoginScreen(), settings: settings);
       case forgotPassword:
-        return MaterialPageRoute(
-          builder: (_) => const ForgotPasswordScreen(),
-        );
+        return smoothRoute(const ForgotPasswordScreen(), settings: settings);
       case checkEmail:
         final email = settings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => CheckEmailScreen(email: email),
-        );
+        return smoothRoute(CheckEmailScreen(email: email), settings: settings);
       case registerKtm:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterKtmScreen(),
-        );
+        return smoothRoute(const RegisterKtmScreen(), settings: settings);
       case registerForm:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterFormScreen(),
-        );
+        return smoothRoute(const RegisterFormScreen(), settings: settings);
       case registerInfo:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterInfoScreen(),
-        );
+        return smoothRoute(const RegisterInfoScreen(), settings: settings);
       case emailVerification:
         final email = settings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => EmailVerificationScreen(email: email),
+        return smoothRoute(
+          EmailVerificationScreen(email: email),
+          settings: settings,
         );
       case main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
+        return smoothRoute(const MainScreen(), settings: settings);
       case addDiscussion:
-        return MaterialPageRoute(
-          builder: (_) => const AddDiscussionScreen(),
-        );
+        return smoothRoute(const AddDiscussionScreen(), settings: settings);
       default:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(
+        return smoothRoute(
+          const Scaffold(
             body: Center(child: Text('Page Not Found')),
           ),
+          settings: settings,
         );
     }
   }

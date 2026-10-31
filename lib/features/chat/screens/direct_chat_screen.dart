@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'camera_screen.dart';
 
@@ -36,6 +38,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
       'time': '20.00',
       'isMe': true,
       'isFailed': false,
+      'isLiked': false,
+      'isNew': false,
     },
     {
       'id': '2',
@@ -43,6 +47,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
       'time': '20.00',
       'isMe': false,
       'isFailed': false,
+      'isLiked': false,
+      'isNew': false,
     },
     {
       'id': '3',
@@ -50,6 +56,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
       'time': '20.00',
       'isMe': true,
       'isFailed': true, // Mensimulasikan pesan gagal kirim dengan ikon merah reload
+      'isLiked': false,
+      'isNew': false,
     },
   ];
 
@@ -76,6 +84,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    HapticFeedback.lightImpact();
+
     final now = TimeOfDay.now();
     final hour = now.hour.toString().padLeft(2, '0');
     final minute = now.minute.toString().padLeft(2, '0');
@@ -87,20 +97,29 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         'time': '$hour.$minute',
         'isMe': true,
         'isFailed': false,
+        'isLiked': false,
+        'isNew': true,
       });
       _showAttachmentMenu = false;
     });
 
     _messageController.clear();
 
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 80), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
         );
       }
+    });
+  }
+
+  void _toggleBubbleReaction(ChatMessageMap msg) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      msg['isLiked'] = !(msg['isLiked'] ?? false);
     });
   }
 
@@ -164,6 +183,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () {
+                          HapticFeedback.mediumImpact();
                           setState(() {
                             _messages.remove(msg);
                           });
@@ -191,6 +211,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () {
+                          HapticFeedback.lightImpact();
                           setState(() {
                             msg['isFailed'] = false;
                           });
@@ -220,7 +241,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     setState(() => _showAttachmentMenu = false);
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CameraScreen()),
+      CupertinoPageRoute(builder: (_) => const CameraScreen()),
     );
     if (result != null) {
       final now = TimeOfDay.now();
@@ -233,6 +254,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
           'time': '$hour.$minute',
           'isMe': true,
           'isFailed': false,
+          'isLiked': false,
+          'isNew': true,
         });
       });
     }
@@ -252,77 +275,93 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _isSearchingMessage
-          ? _buildSearchAppBar()
-          : _buildDefaultAppBar(),
-      body: Stack(
-        children: [
-          // 1. Wallpaper Pattern Background Maskot Bara (backgroundDM.png)
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: Image.asset(
-                'assets/images/backgroundDM.png',
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: _isSearchingMessage
+              ? _buildSearchAppBar()
+              : _buildDefaultAppBar(),
+        ),
+      ),
+      body: GestureDetector(
+        onTap: () {
+          if (_showAttachmentMenu) {
+            setState(() => _showAttachmentMenu = false);
+          }
+          FocusScope.of(context).unfocus();
+        },
+        behavior: HitTestBehavior.translucent,
+        child: Stack(
+          children: [
+            // 1. Wallpaper Pattern Background Maskot Bara (backgroundDM.png)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: Image.asset(
+                  'assets/images/backgroundDM.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
 
-          // 2. Daftar Pesan Chat & Bubble
-          Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  children: [
-                    // Badge Header Waktu (Hari ini)
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 14),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8DA3BF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Hari ini',
-                          style: GoogleFonts.manrope(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+            // 2. Daftar Pesan Chat & Bubble
+            Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    controller: _scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    children: [
+                      // Badge Header Waktu (Hari ini)
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8DA3BF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Hari ini',
+                            style: GoogleFonts.manrope(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // List Pesan Bubble
-                    ..._displayedMessages.map((msg) => _buildChatBubble(msg)),
-                  ],
+                      // List Pesan Bubble
+                      ..._displayedMessages.map((msg) => _buildChatBubble(msg)),
+                    ],
+                  ),
                 ),
-              ),
 
-              // 3. Bottom Input Bar & Popover Attachment
-              _buildBottomInputArea(),
-            ],
-          ),
-        ],
+                // 3. Bottom Input Bar & Popover Attachment
+                _buildBottomInputArea(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildDefaultAppBar() {
+  Widget _buildDefaultAppBar() {
     return AppBar(
+      key: const ValueKey('default_appbar'),
       backgroundColor: Colors.white,
       elevation: 0.5,
       leadingWidth: 44,
@@ -340,7 +379,6 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             radius: 18,
             backgroundColor: const Color(0xFFCBD5E1),
             backgroundImage: AssetImage(widget.avatarAsset),
-            
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -372,6 +410,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         IconButton(
           icon: const Icon(Icons.search, color: Color(0xFF1E293B), size: 22),
           onPressed: () {
+            HapticFeedback.selectionClick();
             setState(() {
               _isSearchingMessage = true;
             });
@@ -384,6 +423,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             size: 22,
           ),
           onPressed: () {
+            HapticFeedback.selectionClick();
             _showChatRoomOptions();
           },
         ),
@@ -391,8 +431,9 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     );
   }
 
-  PreferredSizeWidget _buildSearchAppBar() {
+  Widget _buildSearchAppBar() {
     return AppBar(
+      key: const ValueKey('search_appbar'),
       backgroundColor: Colors.white,
       elevation: 0.5,
       title: Container(
@@ -444,46 +485,92 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   Widget _buildChatBubble(ChatMessageMap msg) {
     final bool isMe = msg['isMe'] ?? false;
     final bool isFailed = msg['isFailed'] ?? false;
+    final bool isLiked = msg['isLiked'] ?? false;
+    final bool isNew = msg['isNew'] ?? false;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    Widget bubbleRow = Padding(
+      padding: EdgeInsets.only(bottom: isLiked ? 20 : 12),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.72,
-            ),
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-            decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF4C7BB8) : const Color(0xFF8C9BAE),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(isMe ? 16 : 4),
-                bottomRight: Radius.circular(isMe ? 4 : 16),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          GestureDetector(
+            onDoubleTap: () => _toggleBubbleReaction(msg),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  msg['text'],
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    height: 1.35,
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                  decoration: BoxDecoration(
+                    color:
+                        isMe ? const Color(0xFF4C7BB8) : const Color(0xFF8C9BAE),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isMe ? 16 : 4),
+                      bottomRight: Radius.circular(isMe ? 4 : 16),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        msg['text'],
+                        style: GoogleFonts.manrope(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        msg['time'],
+                        style: GoogleFonts.manrope(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  msg['time'],
-                  style: GoogleFonts.manrope(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white70,
+
+                // Instagram DM Double-Tap ❤️ Reaction Badge
+                Positioned(
+                  bottom: -10,
+                  right: isMe ? null : 8,
+                  left: isMe ? 8 : null,
+                  child: AnimatedScale(
+                    scale: isLiked ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.elasticOut,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        size: 13,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -507,6 +594,33 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         ],
       ),
     );
+
+    if (!isNew) return bubbleRow;
+
+    // Smooth pop-in entrance animation for newly sent messages
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(msg['id']),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutBack,
+      onEnd: () {
+        msg['isNew'] = false;
+      },
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, 14 * (1 - value)),
+            child: Transform.scale(
+              scale: 0.92 + (0.08 * value),
+              alignment: isMe ? Alignment.bottomRight : Alignment.bottomLeft,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: bubbleRow,
+    );
   }
 
   Widget _buildBottomInputArea() {
@@ -519,66 +633,78 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Popover Menu Attachment (+)
-            if (_showAttachmentMenu)
-              Positioned(
-                bottom: 56,
-                left: 0,
-                child: Container(
-                  width: 170,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B9BB4),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+            // Popover Menu Attachment (+) with Smooth Scale & Opacity Animation
+            Positioned(
+              bottom: 56,
+              left: 0,
+              child: IgnorePointer(
+                ignoring: !_showAttachmentMenu,
+                child: AnimatedScale(
+                  scale: _showAttachmentMenu ? 1.0 : 0.75,
+                  alignment: Alignment.bottomLeft,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutBack,
+                  child: AnimatedOpacity(
+                    opacity: _showAttachmentMenu ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 160),
+                    child: Container(
+                      width: 170,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B9BB4),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    children: [
-                      _buildAttachmentOption(
-                        Icons.description_outlined,
-                        'Dokumen',
-                        () {
-                          setState(() => _showAttachmentMenu = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Pilih dokumen'),
-                              duration: Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        children: [
+                          _buildAttachmentOption(
+                            Icons.description_outlined,
+                            'Dokumen',
+                            () {
+                              setState(() => _showAttachmentMenu = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Pilih dokumen'),
+                                  duration: Duration(seconds: 1),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(color: Colors.white24, height: 1),
+                          _buildAttachmentOption(
+                            Icons.photo_library_outlined,
+                            'Foto & Video',
+                            () {
+                              setState(() => _showAttachmentMenu = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Pilih foto & video'),
+                                  duration: Duration(seconds: 1),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(color: Colors.white24, height: 1),
+                          _buildAttachmentOption(
+                            Icons.camera_alt_outlined,
+                            'Kamera',
+                            _openCamera,
+                          ),
+                        ],
                       ),
-                      const Divider(color: Colors.white24, height: 1),
-                      _buildAttachmentOption(
-                        Icons.photo_library_outlined,
-                        'Foto & Video',
-                        () {
-                          setState(() => _showAttachmentMenu = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Pilih foto & video'),
-                              duration: Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                      ),
-                      const Divider(color: Colors.white24, height: 1),
-                      _buildAttachmentOption(
-                        Icons.camera_alt_outlined,
-                        'Kamera',
-                        _openCamera,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
+            ),
 
             // Baris Input Bar
             Row(
@@ -593,12 +719,18 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: Icon(
-                            _showAttachmentMenu ? Icons.close : Icons.add,
-                            color: const Color(0xFF475569),
-                            size: 22,
+                          icon: AnimatedRotation(
+                            turns: _showAttachmentMenu ? 0.125 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
+                            child: const Icon(
+                              Icons.add,
+                              color: Color(0xFF475569),
+                              size: 22,
+                            ),
                           ),
                           onPressed: () {
+                            HapticFeedback.selectionClick();
                             setState(() {
                               _showAttachmentMenu = !_showAttachmentMenu;
                             });
@@ -637,25 +769,40 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                     ),
                   ),
                 ),
-                if (hasText) ...[
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _sendMessage,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4C7BB8),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
+
+                // Smooth Animated Send Button Appearance
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: hasText
+                      ? Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.7, end: 1.0),
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutBack,
+                            builder: (context, scale, child) =>
+                                Transform.scale(scale: scale, child: child),
+                            child: GestureDetector(
+                              onTap: _sendMessage,
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF4C7BB8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.send_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ],
@@ -712,7 +859,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+                leading:
+                    const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
                 title: Text(
                   'Hapus Pesan',
                   style: GoogleFonts.manrope(
@@ -731,7 +879,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.report_outlined, color: Color(0xFFEF4444)),
+                leading:
+                    const Icon(Icons.report_outlined, color: Color(0xFFEF4444)),
                 title: Text(
                   'Laporkan Pesan',
                   style: GoogleFonts.manrope(

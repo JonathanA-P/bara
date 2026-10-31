@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'direct_chat_screen.dart';
 
@@ -16,6 +18,7 @@ class NotificationChatScreen extends StatefulWidget {
 
 class _NotificationChatScreenState extends State<NotificationChatScreen> {
   late int _selectedTab; // 0: Notifikasi, 1: Pesan
+  late final PageController _pageController;
 
   // Data Notifikasi (Figma)
   final List<Map<String, dynamic>> _notifications = [
@@ -104,6 +107,30 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
   void initState() {
     super.initState();
     _selectedTab = widget.initialTabIndex;
+    _pageController = PageController(initialPage: _selectedTab);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _switchTab(int index) {
+    if (_selectedTab == index) return;
+    HapticFeedback.selectionClick();
+    setState(() => _selectedTab = index);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _onRefresh() async {
+    HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 650));
+    if (mounted) setState(() {});
   }
 
   void _showNotificationOptions(
@@ -154,6 +181,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
     );
 
     if (value == 'hapus' && mounted) {
+      HapticFeedback.mediumImpact();
       setState(() {
         _notifications.removeAt(index);
       });
@@ -223,6 +251,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
     );
 
     if (value == 'hapus' && mounted) {
+      HapticFeedback.mediumImpact();
       setState(() {
         _chats.removeAt(index);
       });
@@ -285,7 +314,7 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
 
             const SizedBox(height: 20),
 
-            // 2. TABS: NOTIFIKASI | PESAN (WITH UNDERLINE INDICATOR)
+            // 2. TABS: NOTIFIKASI | PESAN (WITH SMOOTH SLIDING UNDERLINE INDICATOR)
             Container(
               decoration: const BoxDecoration(
                 border: Border(
@@ -295,72 +324,82 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
                   ),
                 ),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Tab Notifikasi
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = 0),
-                      behavior: HitTestBehavior.opaque,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
+                  Row(
+                    children: [
+                      // Tab Notifikasi
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _switchTab(0),
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Text(
-                              'Notifikasi',
-                              style: GoogleFonts.manrope(
-                                fontSize: 13,
-                                fontWeight: _selectedTab == 0
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: _selectedTab == 0
-                                    ? activeBlue
-                                    : inactiveGrey,
+                            child: Center(
+                              child: AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                style: GoogleFonts.manrope(
+                                  fontSize: 13,
+                                  fontWeight: _selectedTab == 0
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: _selectedTab == 0
+                                      ? activeBlue
+                                      : inactiveGrey,
+                                ),
+                                child: const Text('Notifikasi'),
                               ),
                             ),
                           ),
-                          Container(
-                            height: 2.5,
-                            color: _selectedTab == 0
-                                ? activeBlue
-                                : Colors.transparent,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+
+                      // Tab Pesan
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _switchTab(1),
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                style: GoogleFonts.manrope(
+                                  fontSize: 13,
+                                  fontWeight: _selectedTab == 1
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: _selectedTab == 1
+                                      ? activeBlue
+                                      : inactiveGrey,
+                                ),
+                                child: const Text('Pesan'),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
-                  // Tab Pesan
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = 1),
-                      behavior: HitTestBehavior.opaque,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Text(
-                              'Pesan',
-                              style: GoogleFonts.manrope(
-                                fontSize: 13,
-                                fontWeight: _selectedTab == 1
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: _selectedTab == 1
-                                    ? activeBlue
-                                    : inactiveGrey,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: 2.5,
-                            color: _selectedTab == 1
-                                ? activeBlue
-                                : Colors.transparent,
-                          ),
-                        ],
+                  // Smooth Sliding Underline Indicator
+                  SizedBox(
+                    height: 2.5,
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      alignment: _selectedTab == 0
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: FractionallySizedBox(
+                        widthFactor: 0.5,
+                        child: Container(
+                          height: 2.5,
+                          color: activeBlue,
+                        ),
                       ),
                     ),
                   ),
@@ -368,11 +407,22 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
               ),
             ),
 
-            // 3. TAB CONTENT LISTVIEW
+            // 3. SWIPEABLE TAB CONTENT (INSTAGRAM DM-STYLE PAGEVIEW)
             Expanded(
-              child: _selectedTab == 0
-                  ? _buildNotificationList()
-                  : _buildChatList(),
+              child: PageView(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  if (_selectedTab != index) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selectedTab = index);
+                  }
+                },
+                children: [
+                  _buildNotificationList(),
+                  _buildChatList(),
+                ],
+              ),
             ),
           ],
         ),
@@ -394,90 +444,96 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
       );
     }
 
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: _notifications.length,
-      itemBuilder: (context, index) {
-        final notif = _notifications[index];
-        TapDownDetails? tapDownDetails;
+    return RefreshIndicator(
+      color: const Color(0xFF4C7BB8),
+      onRefresh: _onRefresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        itemCount: _notifications.length,
+        itemBuilder: (context, index) {
+          final notif = _notifications[index];
+          TapDownDetails? tapDownDetails;
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: const Color(0xFFCBD5E1),
-                backgroundImage: AssetImage(notif['avatar']),
-              ),
-              const SizedBox(width: 12),
-
-              // Title and Message
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: notif['name'],
-                            style: GoogleFonts.manrope(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' • ${notif['date']}',
-                            style: GoogleFonts.manrope(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      notif['message'],
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF64748B),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Avatar
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xFFCBD5E1),
+                  backgroundImage: AssetImage(notif['avatar']),
                 ),
-              ),
+                const SizedBox(width: 12),
 
-              // 3-dots action button
-              GestureDetector(
-                onTapDown: (details) => tapDownDetails = details,
-                onTap: () {
-                  if (tapDownDetails != null) {
-                    _showNotificationOptions(tapDownDetails!, index);
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.more_horiz_rounded,
-                    color: Color(0xFF94A3B8),
-                    size: 20,
+                // Title and Message
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: notif['name'],
+                              style: GoogleFonts.manrope(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' • ${notif['date']}',
+                              style: GoogleFonts.manrope(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        notif['message'],
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+
+                // 3-dots action button
+                GestureDetector(
+                  onTapDown: (details) => tapDownDetails = details,
+                  onTap: () {
+                    if (tapDownDetails != null) {
+                      _showNotificationOptions(tapDownDetails!, index);
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.more_horiz_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -495,126 +551,151 @@ class _NotificationChatScreenState extends State<NotificationChatScreen> {
       );
     }
 
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: _chats.length,
-      itemBuilder: (context, index) {
-        final chat = _chats[index];
-        final int unreadCount = chat['unreadCount'] ?? 0;
-        TapDownDetails? tapDownDetails;
+    return RefreshIndicator(
+      color: const Color(0xFF4C7BB8),
+      onRefresh: _onRefresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        itemCount: _chats.length,
+        itemBuilder: (context, index) {
+          final chat = _chats[index];
+          final int unreadCount = chat['unreadCount'] ?? 0;
+          TapDownDetails? tapDownDetails;
 
-        return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DirectChatScreen(
-                  peerName: chat['name'],
-                  lastSeen: chat['time'],
-                  avatarAsset: chat['avatar'],
+          return InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              if (unreadCount > 0) {
+                setState(() {
+                  _chats[index]['unreadCount'] = 0;
+                });
+              }
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (_) => DirectChatScreen(
+                    peerName: chat['name'],
+                    lastSeen: chat['time'],
+                    avatarAsset: chat['avatar'],
+                  ),
                 ),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: const Color(0xFFCBD5E1),
-                  backgroundImage: AssetImage(chat['avatar']),
-                ),
-                const SizedBox(width: 12),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Avatar
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: const Color(0xFFCBD5E1),
+                    backgroundImage: AssetImage(chat['avatar']),
+                  ),
+                  const SizedBox(width: 12),
 
-                // Name & Last message
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: chat['name'],
+                  // Name & Last message
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: chat['name'],
+                                style: GoogleFonts.manrope(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF1E293B),
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' • ${chat['time']}',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          chat['lastMessage'],
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: unreadCount > 0
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: unreadCount > 0
+                                ? const Color(0xFF1E293B)
+                                : const Color(0xFF64748B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Trailing: Badge Unread Or 3-dots (with smooth AnimatedSwitcher)
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: unreadCount > 0
+                        ? Container(
+                            key: ValueKey('badge_$unreadCount'),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: unreadCount > 9 ? 6 : 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                  0xFFF59E0B), // Orange badge like Figma
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              unreadCount >= 99
+                                  ? '99+'
+                                  : unreadCount.toString(),
                               style: GoogleFonts.manrope(
-                                fontSize: 13,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFF1E293B),
+                                color: Colors.white,
                               ),
                             ),
-                            TextSpan(
-                              text: ' • ${chat['time']}',
-                              style: GoogleFonts.manrope(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF94A3B8),
+                          )
+                        : GestureDetector(
+                            key: const ValueKey('more_dots'),
+                            onTapDown: (details) => tapDownDetails = details,
+                            onTap: () {
+                              if (tapDownDetails != null) {
+                                _showChatOptions(tapDownDetails!, index);
+                              }
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.more_horiz_rounded,
+                                color: Color(0xFF94A3B8),
+                                size: 20,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        chat['lastMessage'],
-                        style: GoogleFonts.manrope(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF64748B),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                          ),
                   ),
-                ),
-
-                // Trailing: Badge Unread Or 3-dots
-                if (unreadCount > 0)
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: unreadCount > 9 ? 6 : 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B), // Orange badge like Figma
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      unreadCount >= 99 ? '99+' : unreadCount.toString(),
-                      style: GoogleFonts.manrope(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                else
-                  GestureDetector(
-                    onTapDown: (details) => tapDownDetails = details,
-                    onTap: () {
-                      if (tapDownDetails != null) {
-                        _showChatOptions(tapDownDetails!, index);
-                      }
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.more_horiz_rounded,
-                        color: Color(0xFF94A3B8),
-                        size: 20,
-                      ),
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
