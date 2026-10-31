@@ -9,8 +9,8 @@ class BaraText extends StatelessWidget {
   const BaraText({
     super.key,
     required this.opacity,
-    this.color = Colors.white,
-    this.fontSize = 24,
+    this.color = const Color(0xFFE2E8F0),
+    this.fontSize = 19,
   });
 
   @override
@@ -18,11 +18,11 @@ class BaraText extends StatelessWidget {
     return Opacity(
       opacity: opacity.clamp(0.0, 1.0),
       child: Text(
-        'H i G a v i',
+        'HiGavi',
         style: GoogleFonts.manrope(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           fontSize: fontSize,
-          letterSpacing: 12,
+          letterSpacing: 3.5,
           color: color,
         ),
       ),
