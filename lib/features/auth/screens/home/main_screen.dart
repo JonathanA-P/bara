@@ -26,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color activeBlue = Color(0xFF4C7BB8);
+    const Color activeBlue = Color(0xFF5A7FBA);
     const Color inactiveGrey = Color(0xFF94A3B8);
 
     return Scaffold(
@@ -52,6 +52,7 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                // Tab 0: Home
                 _buildNavItem(
                   index: 0,
                   activeIcon: Icons.home_rounded,
@@ -59,6 +60,8 @@ class _MainScreenState extends State<MainScreen> {
                   activeColor: activeBlue,
                   inactiveColor: inactiveGrey,
                 ),
+
+                // Tab 1: Explore
                 _buildNavItem(
                   index: 1,
                   activeIcon: Icons.explore_rounded,
@@ -66,61 +69,22 @@ class _MainScreenState extends State<MainScreen> {
                   activeColor: activeBlue,
                   inactiveColor: inactiveGrey,
                 ),
-                GestureDetector(
-                  onTap: () => setState(() => _currentIndex = 2),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: SvgPicture.asset(
-                      'assets/images/bookmark.svg',
-                      width: 22,
-                      height: 22,
-                      colorFilter: ColorFilter.mode(
-                        _currentIndex == 2 ? activeBlue : inactiveGrey,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
+
+                // Tab 2: Matkul (Bookmark / Book Lines)
+                _buildMatkulNavItem(
+                  index: 2,
+                  activeColor: activeBlue,
+                  inactiveColor: inactiveGrey,
                 ),
-                GestureDetector(
-                  onTap: () => setState(() => _currentIndex = 3),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Image.asset(
-                          'assets/images/chatbar.png',
-                          width: 22,
-                          height: 22,
-                          color: _currentIndex == 3 ? activeBlue : inactiveGrey,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            _currentIndex == 3
-                                ? Icons.chat_bubble_rounded
-                                : Icons.chat_bubble_outline_rounded,
-                            size: 24,
-                            color: _currentIndex == 3
-                                ? activeBlue
-                                : inactiveGrey,
-                          ),
-                        ),
-                        Positioned(
-                          top: -2,
-                          right: -3,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF59E0B),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
+                // Tab 3: Notifikasi & Chat
+                _buildChatNavItem(
+                  index: 3,
+                  activeColor: activeBlue,
+                  inactiveColor: inactiveGrey,
                 ),
+
+                // Tab 4: Profile
                 _buildNavItem(
                   index: 4,
                   activeIcon: Icons.person_rounded,
@@ -154,6 +118,71 @@ class _MainScreenState extends State<MainScreen> {
           isSelected ? activeIcon : inactiveIcon,
           size: 25,
           color: isSelected ? activeColor : inactiveColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMatkulNavItem({
+    required int index,
+    required Color activeColor,
+    required Color inactiveColor,
+  }) {
+    final bool isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: SvgPicture.asset(
+          'assets/images/bookmark.svg',
+          width: 23,
+          height: 23,
+          colorFilter: ColorFilter.mode(
+            isSelected ? activeColor : inactiveColor,
+            BlendMode.srcIn,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatNavItem({
+    required int index,
+    required Color activeColor,
+    required Color inactiveColor,
+  }) {
+    final bool isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.chat_bubble_rounded
+                  : Icons.chat_bubble_outline_rounded,
+              size: 24,
+              color: isSelected ? activeColor : inactiveColor,
+            ),
+            Positioned(
+              top: -2,
+              right: -3,
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF59E0B),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
