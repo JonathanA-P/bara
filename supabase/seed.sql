@@ -36,3 +36,11 @@ VALUES
 )
 ON CONFLICT DO NOTHING;
 
+-- Demo Topik Populer / Diskusikan Kuliah & Luar Kelas
+-- (Catatan: author_id disesuaikan dengan UUID profil pengguna pada instance Supabase masing-masing)
+-- Contoh query:
+-- INSERT INTO public.discussions (title, content, tag, author_id, likes_count, replies_count)
+-- VALUES 
+-- ('Besok aku UTS, ada yang punya materi atau catetan gaa?', 'Aku baru masuk materi modul 1 probabilitas & statistik...', 'Sistem Informasi', '00000000-0000-0000-0000-000000000000', 124, 32),
+-- ('Info Open Recruitment Panitia Dies Natalis FILKOM UB!', 'Divisi Acara dan Humas lagi buka pendaftaran panitia baru...', 'Komunitas Kampus', '00000000-0000-0000-0000-000000000000', 98, 14);
+

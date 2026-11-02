@@ -81,6 +81,49 @@ class DiscussionService {
     }
   }
 
+  Future<bool> toggleLike(String discussionId) async {
+    final client = _client;
+    final userId = _service.currentUserId;
+    if (client == null || userId == null) return false;
+
+    final exists = await client
+        .from('discussion_likes')
+        .select()
+        .eq('user_id', userId)
+        .eq('discussion_id', discussionId)
+        .maybeSingle();
+
+    if (exists != null) {
+      await client
+          .from('discussion_likes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('discussion_id', discussionId);
+      return false; // unliked
+    } else {
+      await client.from('discussion_likes').insert({
+        'user_id': userId,
+        'discussion_id': discussionId,
+      });
+      return true; // liked
+    }
+  }
+
+  Future<bool> isDiscussionLiked(String discussionId) async {
+    final client = _client;
+    final userId = _service.currentUserId;
+    if (client == null || userId == null) return false;
+
+    final exists = await client
+        .from('discussion_likes')
+        .select('discussion_id')
+        .eq('user_id', userId)
+        .eq('discussion_id', discussionId)
+        .maybeSingle();
+
+    return exists != null;
+  }
+
   Future<List<Map<String, dynamic>>> getBookmarkedDiscussions() async {
     final client = _client;
     final userId = _service.currentUserId;

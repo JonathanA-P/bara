@@ -169,6 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
+    try {
+      DiscussionService().toggleLike(postId);
+    } catch (_) {}
   }
 
   void _openCreatePostDialog() {
@@ -335,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           } catch (_) {}
 
-                          if (mounted) Navigator.pop(ctx);
+                          if (ctx.mounted) Navigator.pop(ctx);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF5584C3),

@@ -147,6 +147,13 @@ CREATE TABLE IF NOT EXISTS public.bookmarks (
     PRIMARY KEY (user_id, discussion_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.discussion_likes (
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    discussion_id UUID NOT NULL REFERENCES public.discussions(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    PRIMARY KEY (user_id, discussion_id)
+);
+
 -- ------------------------------------------------------------------------------
 -- 7. INCIDENT REPORTS (Duty of Care & Keamanan)
 -- ------------------------------------------------------------------------------
@@ -191,6 +198,7 @@ ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.discussions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.discussion_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.discussion_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incident_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
@@ -228,6 +236,13 @@ CREATE POLICY "Authenticated users can comment" ON public.discussion_comments FO
 -- Bookmarks
 DROP POLICY IF EXISTS "Users can manage own bookmarks" ON public.bookmarks;
 CREATE POLICY "Users can manage own bookmarks" ON public.bookmarks FOR ALL USING (auth.uid() = user_id);
+
+-- Likes
+DROP POLICY IF EXISTS "Likes viewable by everyone" ON public.discussion_likes;
+CREATE POLICY "Likes viewable by everyone" ON public.discussion_likes FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can manage own likes" ON public.discussion_likes;
+CREATE POLICY "Users can manage own likes" ON public.discussion_likes FOR ALL USING (auth.uid() = user_id);
 
 -- Swipes & Matches
 DROP POLICY IF EXISTS "Users can view and insert own swipes" ON public.mentor_swipes;
@@ -316,3 +331,50 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Automatic Counter Triggers
+CREATE OR REPLACE FUNCTION public.update_discussion_comment_count() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.discussions 
+        SET replies_count = replies_count + 1 
+        WHERE id = NEW.discussion_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE public.discussions 
+        SET replies_count = GREATEST(replies_count - 1, 0) 
+        WHERE id = OLD.discussion_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_discussion_comment_change ON public.discussion_comments;
+CREATE TRIGGER on_discussion_comment_change
+    AFTER INSERT OR DELETE ON public.discussion_comments
+    FOR EACH ROW EXECUTE FUNCTION public.update_discussion_comment_count();
+
+CREATE OR REPLACE FUNCTION public.update_discussion_like_count() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.discussions 
+        SET likes_count = likes_count + 1 
+        WHERE id = NEW.discussion_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE public.discussions 
+        SET likes_count = GREATEST(likes_count - 1, 0) 
+        WHERE id = OLD.discussion_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_discussion_like_change ON public.discussion_likes;
+CREATE TRIGGER on_discussion_like_change
+    AFTER INSERT OR DELETE ON public.discussion_likes
+    FOR EACH ROW EXECUTE FUNCTION public.update_discussion_like_count();

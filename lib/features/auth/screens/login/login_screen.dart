@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'assets/images/CloudArt_margin.png',
                 width: 220,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),
           ),

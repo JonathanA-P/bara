@@ -32,7 +32,6 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF1B3A5C);
     const Color buttonBlue = Color(0xFF2D5F8A);
     const Color fieldBorder = Color(0xFFCBD5E1);
     const Color textDark = Color(0xFF1E293B);

@@ -74,7 +74,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryBlue = Color(0xFF1B3A5C);
     const Color buttonBlue = Color(0xFF2D5F8A);
     const Color buttonBlueFaded = Color(0xFFB0C4DE);
     const Color textDark = Color(0xFF1E293B);

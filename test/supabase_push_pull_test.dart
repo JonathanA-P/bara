@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bara/core/services/supabase_service.dart';
 import 'package:bara/core/services/discussion_service.dart';
 import 'package:bara/core/services/matching_service.dart';
 import 'package:bara/core/services/chat_service.dart';
@@ -46,6 +45,15 @@ void main() {
       final conversations = await chatService.getConversations();
 
       expect(conversations, isA<List<Map<String, dynamic>>>());
+    });
+
+    test('DiscussionService toggleLike returns false when offline/unauthenticated', () async {
+      final discussionService = DiscussionService();
+      final result = await discussionService.toggleLike('test-disc-id');
+      expect(result, isFalse);
+
+      final isLiked = await discussionService.isDiscussionLiked('test-disc-id');
+      expect(isLiked, isFalse);
     });
   });
 }
