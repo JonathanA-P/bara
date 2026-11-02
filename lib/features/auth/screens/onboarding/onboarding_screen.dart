@@ -95,7 +95,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'BARA',
+                        'HiGavi',
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.w800,
                           fontSize: 20,

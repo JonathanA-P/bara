@@ -74,14 +74,14 @@ void main() {
 
   testWidgets('HomeScreen renders feed and filters successfully', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
-    expect(find.text('BARA'), findsOneWidget);
-    expect(find.text('For You'), findsOneWidget);
-    expect(find.text('Create'), findsOneWidget);
+    expect(find.text('HiGavi'), findsOneWidget);
+    expect(find.text('Kuliah'), findsOneWidget);
+    expect(find.text('Luar Kelas'), findsOneWidget);
   });
 
   testWidgets('DetailPostScreen renders post and comment field', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: DetailPostScreen()));
-    expect(find.text('BARA'), findsOneWidget);
+    expect(find.text('HiGavi'), findsOneWidget);
     expect(find.text('Post'), findsOneWidget);
     expect(find.text('Tulis sesuatu'), findsOneWidget);
   });
@@ -93,7 +93,8 @@ void main() {
 
   testWidgets('LoginScreen renders fields and login button', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
-    expect(find.text('Log in with University SSO'), findsOneWidget);
+    expect(find.text('Welcome back to BARA'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
   });
 
   testWidgets('OtpVerificationScreen renders verification UI', (tester) async {

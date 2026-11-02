@@ -18,7 +18,7 @@ class BaraText extends StatelessWidget {
     return Opacity(
       opacity: opacity.clamp(0.0, 1.0),
       child: Text(
-        'B A R A',
+        'H i G a v i',
         style: GoogleFonts.manrope(
           fontWeight: FontWeight.w800,
           fontSize: fontSize,
