@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bara/features/explore/screens/explore_screen.dart';
+import 'package:bara/features/explore/screens/search_screen.dart';
 import 'package:bara/features/notification/screens/notification_screen.dart';
 import 'package:bara/features/chat/screens/chat_list_screen.dart';
 import 'package:bara/features/chat/screens/chat_room_screen.dart';
@@ -15,6 +16,14 @@ import 'package:bara/features/auth/screens/discussion/detail_post_screen.dart';
 import 'package:bara/features/auth/screens/profile/profile_screen.dart';
 
 void main() {
+  testWidgets('SearchScreen renders Figma components successfully', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SearchScreen()));
+    expect(find.text('Temukan obrolan yang relevan untukmu.'), findsOneWidget);
+    expect(find.text('Topik Populer'), findsOneWidget);
+    expect(find.text('Algoritma & Pemrograman'), findsOneWidget);
+    expect(find.text('Untuk Anda'), findsOneWidget);
+  });
+
   testWidgets('ExploreScreen renders successfully', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ExploreScreen()));
     expect(find.text('Eksplorasi'), findsOneWidget);

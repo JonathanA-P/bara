@@ -5,6 +5,7 @@ import '../profile/profile_screen.dart';
 import '../discussion/add_discussion_screen.dart';
 import '../bookmark/bookmark_screen.dart';
 import 'package:bara/features/explore/screens/explore_screen.dart';
+import 'package:bara/features/explore/screens/search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const ExploreScreen(),
+    const SearchScreen(),
     const BookmarkScreen(),
     const ProfileScreen(),
   ];
@@ -72,10 +73,14 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _currentIndex = 1),
-                    icon: Icon(
-                      Icons.explore_outlined,
-                      size: 26,
-                      color: _currentIndex == 1 ? activeBlue : inactiveGrey,
+                    icon: SvgPicture.asset(
+                      'assets/images/compas.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        _currentIndex == 1 ? activeBlue : inactiveGrey,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 50),

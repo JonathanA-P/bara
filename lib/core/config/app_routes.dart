@@ -10,6 +10,7 @@ import '../../features/auth/screens/profile/profile_screen.dart';
 import '../../features/auth/screens/profile/edit_profile_screen.dart';
 import '../../features/auth/screens/bookmark/bookmark_screen.dart';
 import '../../features/explore/screens/explore_screen.dart';
+import '../../features/explore/screens/search_screen.dart';
 import '../../features/notification/screens/notification_screen.dart';
 import '../../features/chat/screens/chat_list_screen.dart';
 import '../../features/chat/screens/chat_room_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String main = '/main';
   static const String home = '/home';
+  static const String search = '/search';
   static const String explore = '/explore';
   static const String bookmark = '/bookmark';
   static const String profile = '/profile';
@@ -52,6 +54,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const MainScreen());
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case search:
+        return MaterialPageRoute(builder: (_) => const SearchScreen());
       case explore:
         return MaterialPageRoute(builder: (_) => const ExploreScreen());
       case bookmark:

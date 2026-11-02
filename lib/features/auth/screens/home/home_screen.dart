@@ -4,6 +4,7 @@ import '../discussion/detail_post_screen.dart';
 import '../discussion/add_discussion_screen.dart';
 import 'package:bara/features/notification/screens/notification_screen.dart';
 import 'package:bara/features/chat/screens/chat_list_screen.dart';
+import 'package:bara/features/explore/screens/search_screen.dart';
 import 'package:bara/core/services/discussion_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -88,6 +89,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Row(
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.search_rounded, color: textColorDark, size: 22),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SearchScreen(),
+                            ),
+                          );
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(Icons.chat_bubble_outline_rounded, color: textColorDark, size: 22),
                         onPressed: () {

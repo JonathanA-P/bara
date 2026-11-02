@@ -81,6 +81,24 @@ class DiscussionService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getBookmarkedDiscussions() async {
+    final client = _client;
+    final userId = _service.currentUserId;
+    if (client == null || userId == null) return [];
+
+    try {
+      final response = await client
+          .from('bookmarks')
+          .select('discussion_id, discussions(*, profiles(full_name, major, avatar_url))')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getComments(String discussionId) async {
     final client = _client;
     if (client == null) return [];

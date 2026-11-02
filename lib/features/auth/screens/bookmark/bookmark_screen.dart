@@ -58,6 +58,11 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
   @override
   void initState() {
     super.initState();
+    _loadInitialBookmarks();
+    _loadBookmarks();
+  }
+
+  void _loadInitialBookmarks() {
     _items = [
       _BookmarkItem(
         id: '1',
@@ -129,6 +134,35 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
         comments: '94',
       ),
     ];
+  }
+
+  Future<void> _loadBookmarks() async {
+    try {
+      final list = await DiscussionService().getBookmarkedDiscussions();
+      if (list.isNotEmpty && mounted) {
+        setState(() {
+          final liveItems = list.map((b) {
+            final disc = b['discussions'] as Map<String, dynamic>? ?? {};
+            final prof = disc['profiles'] as Map<String, dynamic>?;
+            return _BookmarkItem(
+              id: disc['id']?.toString() ?? b['discussion_id']?.toString() ?? '1',
+              title: disc['title'] as String? ?? 'Diskusi BARA',
+              authorName: prof?['full_name'] as String? ?? 'Mahasiswa FILKOM',
+              authorRole: prof?['major'] as String? ?? 'FILKOM UB',
+              timeAgo: 'Tersimpan',
+              categoryTag: (disc['tag'] as String? ?? 'FORUM').toUpperCase(),
+              categoryType: 'Study Notes',
+              snippet: disc['content'] as String? ?? '',
+              likes: (disc['likes_count'] ?? 0).toString(),
+              comments: (disc['replies_count'] ?? 0).toString(),
+            );
+          }).toList();
+          _items = [...liveItems, ..._items];
+        });
+      }
+    } catch (e) {
+      debugPrint('[BookmarkScreen] load error: $e');
+    }
   }
 
   @override
