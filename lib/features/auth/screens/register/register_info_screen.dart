@@ -1,23 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bara/core/services/auth_service.dart';
+import '../../../../core/services/app_data_controller.dart';
+import '../../../../core/services/auth_service.dart';
 import 'email_verification_screen.dart';
 
 /// Fase 4 - Account info (username, email, password, confirm password)
 class RegisterInfoScreen extends StatefulWidget {
-  final String? initialEmail;
-  final String? initialName;
-  final String? initialNim;
-  final String? initialProdi;
-
-  const RegisterInfoScreen({
-    super.key,
-    this.initialEmail,
-    this.initialName,
-    this.initialNim,
-    this.initialProdi,
-  });
+  const RegisterInfoScreen({super.key});
 
   @override
   State<RegisterInfoScreen> createState() => _RegisterInfoScreenState();
@@ -38,105 +28,14 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialEmail != null && widget.initialEmail!.isNotEmpty) {
-      _emailController.text = widget.initialEmail!;
+    final ctrl = AppDataController.instance;
+    if (ctrl.pendingRegEmail.isNotEmpty) {
+      _emailController.text = ctrl.pendingRegEmail;
     }
-    if (widget.initialName != null && widget.initialName!.isNotEmpty) {
-      _usernameController.text = widget.initialName!;
-    }
-  }
-
-  Future<void> _handleRegister() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
-    final username = _usernameController.text.trim();
-
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Harap lengkapi semua data pendaftaran.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password minimal 6 karakter.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Konfirmasi password tidak cocok.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Harap centang persetujuan syarat dan ketentuan.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await AuthService().signUp(
-        email: email,
-        password: password,
-        fullName: username,
-        nim: widget.initialNim ?? '',
-        major: widget.initialProdi ?? 'Informatika',
-        role: 'mentee',
-      );
-
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EmailVerificationScreen(email: email),
-        ),
-      );
-    } on AuthException catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: const Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal mendaftar: $e'),
-          backgroundColor: const Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    if (ctrl.pendingRegName.isNotEmpty) {
+      _usernameController.text = ctrl.pendingRegName
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
     }
   }
 
@@ -147,6 +46,108 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap isi semua kolom pendaftaran.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Password minimal 8 karakter.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Konfirmasi password tidak cocok.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap setujui Syarat & Ketentuan serta Kebijakan Privasi Hi!Gavi.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final ctrl = AppDataController.instance;
+    final fullName =
+        ctrl.pendingRegName.isNotEmpty ? ctrl.pendingRegName : username;
+    final nim =
+        ctrl.pendingRegNim.isNotEmpty ? ctrl.pendingRegNim : '235150200111001';
+    final major = ctrl.pendingRegProdi;
+
+    try {
+      await AuthService().signUp(
+        email: email,
+        password: password,
+        fullName: fullName,
+        nim: nim,
+        major: major,
+      );
+    } catch (_) {}
+
+    await ctrl.registerNewAccount(
+      fullName: fullName,
+      username: username,
+      email: email,
+      nim: nim,
+      major: major,
+    );
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => EmailVerificationScreen(
+            email: email,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -275,7 +276,7 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      side: BorderSide(
+                      side: const BorderSide(
                         color: fieldBorder,
                         width: 1.5,
                       ),
@@ -295,8 +296,11 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                           color: textMuted,
                           height: 1.4,
                         ),
-                        children: [
-                          const TextSpan(text: 'Minimal 8 karakter '),
+                        children: const [
+                          TextSpan(
+                            text:
+                                'Saya menyetujui Ketentuan Layanan & Kebijakan Privasi Hi!Gavi',
+                          ),
                         ],
                       ),
                     ),
@@ -323,8 +327,8 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
                             color: Colors.white,
+                            strokeWidth: 2.5,
                           ),
                         )
                       : Text(
@@ -475,4 +479,3 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
     );
   }
 }
-

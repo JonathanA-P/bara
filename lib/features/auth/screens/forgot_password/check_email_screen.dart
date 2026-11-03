@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:bara/core/services/auth_service.dart';
 import '../login/login_screen.dart';
 
 class CheckEmailScreen extends StatelessWidget {
@@ -145,27 +144,8 @@ class CheckEmailScreen extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () async {
-                      try {
-                        await AuthService().sendPasswordResetEmail(email);
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Link reset baru dikirim ke $email'),
-                            backgroundColor: const Color(0xFF5382C1),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Gagal mengirim link: $e'),
-                            backgroundColor: const Color(0xFFDC2626),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
+                    onTap: () {
+                      // Resend link logic
                     },
                     child: Text(
                       '60s',

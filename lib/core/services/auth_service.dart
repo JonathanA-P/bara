@@ -4,7 +4,8 @@ import 'supabase_service.dart';
 class AuthService {
   final SupabaseService _service;
 
-  AuthService({SupabaseService? service}) : _service = service ?? SupabaseService.instance;
+  AuthService({SupabaseService? service})
+      : _service = service ?? SupabaseService.instance;
 
   SupabaseClient? get _client => _service.client;
 
@@ -22,20 +23,57 @@ class AuthService {
   }) async {
     final client = _client;
     if (client == null) {
-      // Mock mode fallback
       return null;
     }
 
-    return await client.auth.signUp(
+    try {
+      await client.auth.admin.createUser(
+        AdminUserAttributes(
+          email: email,
+          password: password,
+          emailConfirm: true,
+          userMetadata: {
+            'full_name': fullName,
+            'nim': nim,
+            'major': major,
+            'role': role,
+          },
+        ),
+      );
+    } catch (_) {
+      try {
+        await client.auth.signUp(
+          email: email,
+          password: password,
+          data: {
+            'full_name': fullName,
+            'nim': nim,
+            'major': major,
+            'role': role,
+          },
+        );
+      } catch (_) {}
+    }
+
+    final authRes = await client.auth.signInWithPassword(
       email: email,
       password: password,
-      data: {
+    );
+
+    final uid = authRes.user?.id ?? _service.currentUserId;
+    if (uid != null) {
+      await client.from('profiles').upsert({
+        'id': uid,
+        'email': email,
         'full_name': fullName,
         'nim': nim,
         'major': major,
         'role': role,
-      },
-    );
+        'bio': 'Mahasiswa $major FILKOM Universitas Brawijaya',
+      });
+    }
+
+    return authRes;
   }
 
   Future<AuthResponse?> signIn({
@@ -45,10 +83,32 @@ class AuthService {
     final client = _client;
     if (client == null) return null;
 
-    return await client.auth.signInWithPassword(
+    final res = await client.auth.signInWithPassword(
       email: email,
       password: password,
     );
+
+    final user = res.user;
+    if (user != null) {
+      final existing = await getProfile(user.id);
+      if (existing == null) {
+        final meta = user.userMetadata ?? {};
+        final fallbackName = (meta['full_name'] as String?) ??
+            (user.email?.split('@').first ?? 'Mahasiswa FILKOM');
+        await client.from('profiles').upsert({
+          'id': user.id,
+          'email': user.email ?? email,
+          'full_name': fallbackName,
+          'nim': (meta['nim'] as String?) ??
+              '235150${DateTime.now().millisecondsSinceEpoch % 1000000000}',
+          'major': (meta['major'] as String?) ?? 'Teknik Informatika',
+          'role': (meta['role'] as String?) ?? 'mentee',
+          'bio': 'Mahasiswa FILKOM Universitas Brawijaya',
+        });
+      }
+    }
+
+    return res;
   }
 
   Future<AuthResponse?> verifyOtp({
@@ -104,6 +164,53 @@ class AuthService {
     return response;
   }
 
+  Future<List<Map<String, dynamic>>> getAllProfiles() async {
+    final client = _client;
+    if (client == null) return [];
+
+    final response = await client
+        .from('profiles')
+        .select()
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllFollowSwipes() async {
+    final client = _client;
+    if (client == null) return [];
+
+    final response = await client
+        .from('mentor_swipes')
+        .select()
+        .eq('action', 'like');
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> setFollowInDb({
+    required String followerId,
+    required String targetUserId,
+    required bool follow,
+  }) async {
+    final client = _client;
+    if (client == null) return;
+
+    if (follow) {
+      await client.from('mentor_swipes').upsert({
+        'mentee_id': followerId,
+        'mentor_id': targetUserId,
+        'action': 'like',
+      }, onConflict: 'mentee_id,mentor_id');
+    } else {
+      await client
+          .from('mentor_swipes')
+          .delete()
+          .eq('mentee_id', followerId)
+          .eq('mentor_id', targetUserId);
+    }
+  }
+
   Future<void> updateProfile({
     required String fullName,
     String? bio,
@@ -125,4 +232,3 @@ class AuthService {
     await client.from('profiles').update(data).eq('id', userId);
   }
 }
-
