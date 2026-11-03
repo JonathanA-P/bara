@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bara/core/services/auth_service.dart';
 import 'email_verification_screen.dart';
 
 /// Fase 4 - Account info (username, email, password, confirm password)
 class RegisterInfoScreen extends StatefulWidget {
-  const RegisterInfoScreen({super.key});
+  final String? initialEmail;
+  final String? initialName;
+  final String? initialNim;
+  final String? initialProdi;
+
+  const RegisterInfoScreen({
+    super.key,
+    this.initialEmail,
+    this.initialName,
+    this.initialNim,
+    this.initialProdi,
+  });
 
   @override
   State<RegisterInfoScreen> createState() => _RegisterInfoScreenState();
@@ -20,6 +33,112 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
   bool _isObscurePassword = true;
   bool _isObscureConfirm = true;
   bool _agreedToTerms = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialEmail != null && widget.initialEmail!.isNotEmpty) {
+      _emailController.text = widget.initialEmail!;
+    }
+    if (widget.initialName != null && widget.initialName!.isNotEmpty) {
+      _usernameController.text = widget.initialName!;
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+    final username = _usernameController.text.trim();
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap lengkapi semua data pendaftaran.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password minimal 6 karakter.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Konfirmasi password tidak cocok.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap centang persetujuan syarat dan ketentuan.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().signUp(
+        email: email,
+        password: password,
+        fullName: username,
+        nim: widget.initialNim ?? '',
+        major: widget.initialProdi ?? 'Informatika',
+        role: 'mentee',
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EmailVerificationScreen(email: email),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mendaftar: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -191,18 +310,7 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EmailVerificationScreen(
-                          email: _emailController.text.isNotEmpty
-                              ? _emailController.text
-                              : 'nadia@kampus.ac.id',
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,
                     elevation: 0,
@@ -210,14 +318,23 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
-                    'Daftar Sekarang',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Daftar Sekarang',
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 32),

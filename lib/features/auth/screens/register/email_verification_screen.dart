@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bara/core/services/auth_service.dart';
 import '../login/login_screen.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -25,6 +27,92 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Timer? _timer;
   int _secondsRemaining = 42;
   bool _canResend = false;
+  bool _isLoading = false;
+
+  Future<void> _handleVerify() async {
+    final token = _controllers.map((c) => c.text.trim()).join();
+    if (token.length < 6) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().verifyOtp(
+        email: widget.email,
+        token: token,
+        type: OtpType.signup,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verifikasi email berhasil! Silakan masuk.'),
+          backgroundColor: Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Verifikasi gagal: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleResend() async {
+    try {
+      await AuthService().resendOtp(email: widget.email);
+      _startTimer();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kode OTP baru telah dikirim ke ${widget.email}'),
+          backgroundColor: const Color(0xFF5382C1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim ulang OTP: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -250,18 +338,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _isCodeComplete
-                      ? () {
-                          // Navigate to login on success
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        }
-                      : null,
+                  onPressed: (_isCodeComplete && !_isLoading) ? _handleVerify : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         _isCodeComplete ? buttonBlue : buttonBlueFaded,
@@ -271,14 +348,23 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                     disabledBackgroundColor: buttonBlueFaded,
                   ),
-                  child: Text(
-                    'Verifikasi Email',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Verifikasi Email',
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -296,11 +382,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: _canResend
-                        ? () {
-                            _startTimer();
-                          }
-                        : null,
+                    onTap: _canResend ? _handleResend : null,
                     child: Text(
                       'Kirim ulang $_formattedTime',
                       style: GoogleFonts.manrope(

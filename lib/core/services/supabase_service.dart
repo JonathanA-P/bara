@@ -25,27 +25,29 @@ class SupabaseService {
   /// Falls back safely if keys are absent or invalid.
   Future<void> initialize() async {
     try {
-      String url = '';
-      String anonKey = '';
+      String url = const String.fromEnvironment('SUPABASE_URL');
+      String anonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
 
-      try {
-        await dotenv.load(fileName: '.env');
-        url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
-        anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
-      } catch (_) {
+      if (url.isEmpty || anonKey.isEmpty) {
         try {
-          final file = io.File('.env');
-          if (file.existsSync()) {
-            final lines = await file.readAsLines();
-            for (final line in lines) {
-              if (line.startsWith('SUPABASE_URL=')) {
-                url = line.substring('SUPABASE_URL='.length).trim();
-              } else if (line.startsWith('SUPABASE_ANON_KEY=')) {
-                anonKey = line.substring('SUPABASE_ANON_KEY='.length).trim();
+          await dotenv.load(fileName: '.env');
+          url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+          anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+        } catch (_) {
+          try {
+            final file = io.File('.env');
+            if (file.existsSync()) {
+              final lines = await file.readAsLines();
+              for (final line in lines) {
+                if (line.startsWith('SUPABASE_URL=')) {
+                  url = line.substring('SUPABASE_URL='.length).trim();
+                } else if (line.startsWith('SUPABASE_ANON_KEY=')) {
+                  anonKey = line.substring('SUPABASE_ANON_KEY='.length).trim();
+                }
               }
             }
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
       }
 
       if (url.isNotEmpty && anonKey.isNotEmpty && url.startsWith('http')) {

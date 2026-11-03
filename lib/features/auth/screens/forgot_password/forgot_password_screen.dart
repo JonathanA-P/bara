@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bara/core/services/auth_service.dart';
 import 'check_email_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -11,6 +13,55 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Masukkan email kampus Anda.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await AuthService().sendPasswordResetEmail(email);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CheckEmailScreen(email: email),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim link reset: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -204,18 +255,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CheckEmailScreen(
-                          email: _emailController.text.isNotEmpty
-                              ? _emailController.text
-                              : 'nina.puri@student.ac.id',
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleResetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,
                     elevation: 0,
@@ -223,14 +263,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
-                    'Kirim Link Reset',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Kirim Link Reset',
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),

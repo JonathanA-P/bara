@@ -184,7 +184,12 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RegisterInfoScreen(),
+                        builder: (context) => RegisterInfoScreen(
+                          initialName: _nameController.text.trim(),
+                          initialEmail: _emailController.text.trim(),
+                          initialNim: _nimController.text.trim(),
+                          initialProdi: _selectedProdi,
+                        ),
                       ),
                     );
                   },
