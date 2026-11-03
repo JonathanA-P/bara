@@ -318,11 +318,15 @@ BEGIN
     VALUES (
         new.id,
         new.email,
-        COALESCE(new.raw_user_meta_data->>'full_name', 'Mahasiswa FILKOM'),
-        COALESCE(new.raw_user_meta_data->>'nim', '235150200111000'),
-        COALESCE(new.raw_user_meta_data->>'major', 'Teknik Informatika'),
-        COALESCE(new.raw_user_meta_data->>'role', 'mentee')
-    );
+        COALESCE(NULLIF(TRIM(new.raw_user_meta_data->>'full_name'), ''), 'Mahasiswa FILKOM'),
+        NULLIF(TRIM(new.raw_user_meta_data->>'nim'), ''),
+        COALESCE(NULLIF(TRIM(new.raw_user_meta_data->>'major'), ''), 'Teknik Informatika'),
+        COALESCE(NULLIF(TRIM(new.raw_user_meta_data->>'role'), ''), 'mentee')
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+        updated_at = now();
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
