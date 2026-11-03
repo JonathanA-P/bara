@@ -12,5 +12,6 @@ void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
     expect(find.byType(MyApp), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 6000));
   });
 }

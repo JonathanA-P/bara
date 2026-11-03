@@ -35,7 +35,28 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       if (matched.isNotEmpty) return matched.first;
       return widget.post!;
     }
-    return _dataController.posts.first;
+    if (_dataController.posts.isNotEmpty) {
+      return _dataController.posts.first;
+    }
+    return PostModel(
+      id: 'default',
+      authorName: 'Mahasiswa FILKOM',
+      authorAvatar: 'assets/images/userLogo.png',
+      timeAgo: 'Baru saja',
+      userRole: 'Informatika',
+      tab: PostCategoryTab.kuliah,
+      badges: const [
+        PostBadge(
+          label: 'UMUM',
+          backgroundColor: Color(0xFFE0F2FE),
+          textColor: Color(0xFF0284C7),
+        ),
+      ],
+      title: 'Diskusi Baru',
+      content: 'Selamat datang di diskusi Hi!Gavi.',
+      likesCount: 0,
+      commentsCount: 0,
+    );
   }
 
   List<CommentModel> get _comments =>

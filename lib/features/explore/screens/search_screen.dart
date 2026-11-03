@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bara/core/services/discussion_service.dart';
 import 'package:bara/features/auth/screens/discussion/detail_post_screen.dart';
+import 'package:bara/features/auth/screens/home/models/post_model.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? initialQuery;
@@ -477,10 +478,29 @@ class _SearchScreenState extends State<SearchScreen> {
 
                     return GestureDetector(
                       onTap: () {
+                        final post = PostModel(
+                          id: disc['id']?.toString() ?? '1',
+                          authorName: authorName,
+                          authorAvatar: 'assets/images/userLogo.png',
+                          timeAgo: 'Terbaru',
+                          userRole: major,
+                          tab: PostCategoryTab.kuliah,
+                          badges: [
+                            PostBadge(
+                              label: tag,
+                              backgroundColor: const Color(0xFFE0F2FE),
+                              textColor: const Color(0xFF0284C7),
+                            ),
+                          ],
+                          title: title,
+                          content: content,
+                          likesCount: (likes as num).toInt(),
+                          commentsCount: (replies as num).toInt(),
+                        );
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DetailPostScreen(discussion: disc),
+                            builder: (context) => DetailPostScreen(post: post),
                           ),
                         );
                       },

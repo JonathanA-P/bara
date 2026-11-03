@@ -27,7 +27,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - .env
     - assets/images/logo.svg
     - assets/images/star_3.svg
     - assets/images/star_4.svg

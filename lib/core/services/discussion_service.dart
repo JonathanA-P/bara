@@ -11,7 +11,19 @@ class DiscussionService {
 
   Future<List<Map<String, dynamic>>> getDiscussions({String? tag}) async {
     final client = _client;
-    if (client == null) return [];
+    if (client == null) {
+      return [
+        {
+          'id': '1',
+          'title': 'Bingung perbedaan implementasi Dijkstra vs A* Search di Python',
+          'content': 'Halo teman-teman FILKOM, ada yang paham kapan A* lebih optimal daripada Dijkstra biasa untuk pathfinding labirin?',
+          'tag': 'Struktur Data & Algoritma',
+          'likes_count': 12,
+          'replies_count': 4,
+          'profiles': {'full_name': 'Ahmad Fauzi', 'major': 'Teknik Informatika'}
+        },
+      ];
+    }
 
     var query = client
         .from('discussions')

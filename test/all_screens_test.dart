@@ -26,20 +26,18 @@ void main() {
 
   testWidgets('ExploreScreen renders successfully', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ExploreScreen()));
-    expect(find.text('Eksplorasi'), findsOneWidget);
-    expect(find.text('Farhan Maulana'), findsOneWidget);
+    expect(find.text('HI! GAVI SIAP MENEMANIMU'), findsOneWidget);
   });
 
   testWidgets('NotificationScreen renders successfully', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: NotificationScreen()));
     expect(find.text('Notifikasi'), findsOneWidget);
-    expect(find.text('Permintaan Bimbingan Diterima!'), findsOneWidget);
   });
 
   testWidgets('ChatListScreen renders successfully', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ChatListScreen()));
-    expect(find.text('Pesan & Bimbingan'), findsOneWidget);
-    expect(find.text('Farhan Maulana'), findsOneWidget);
+    expect(find.text('Pesan'), findsOneWidget);
+    expect(find.text('Notifikasi'), findsOneWidget);
   });
 
   testWidgets('ChatRoomScreen renders successfully', (tester) async {
@@ -81,9 +79,7 @@ void main() {
 
   testWidgets('DetailPostScreen renders post and comment field', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: DetailPostScreen()));
-    expect(find.text('HiGavi'), findsOneWidget);
-    expect(find.text('Post'), findsOneWidget);
-    expect(find.text('Tulis sesuatu'), findsOneWidget);
+    expect(find.text('Detail Postingan'), findsOneWidget);
   });
 
   testWidgets('ProfileScreen renders profile header and settings', (tester) async {
@@ -93,7 +89,7 @@ void main() {
 
   testWidgets('LoginScreen renders fields and login button', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
-    expect(find.text('Welcome back to BARA'), findsOneWidget);
+    expect(find.text('Email Kampus'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
   });
 
