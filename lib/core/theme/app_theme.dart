@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 class AppColors {
   // --- WHITE ALFA ---
   static const Color white = Colors.white;
-  static Color whiteAlfa90 = Colors.white.withOpacity(0.90);
-  static Color whiteAlfa80 = Colors.white.withOpacity(0.80);
-  static Color whiteAlfa70 = Colors.white.withOpacity(0.70);
-  static Color whiteAlfa60 = Colors.white.withOpacity(0.60);
-  static Color whiteAlfa50 = Colors.white.withOpacity(0.50);
-  static Color whiteAlfa40 = Colors.white.withOpacity(0.40);
-  static Color whiteAlfa30 = Colors.white.withOpacity(0.30);
-  static Color whiteAlfa20 = Colors.white.withOpacity(0.20);
-  static Color whiteAlfa10 = Colors.white.withOpacity(0.10);
+  static Color whiteAlfa90 = Colors.white.withValues(alpha: 0.90);
+  static Color whiteAlfa80 = Colors.white.withValues(alpha: 0.80);
+  static Color whiteAlfa70 = Colors.white.withValues(alpha: 0.70);
+  static Color whiteAlfa60 = Colors.white.withValues(alpha: 0.60);
+  static Color whiteAlfa50 = Colors.white.withValues(alpha: 0.50);
+  static Color whiteAlfa40 = Colors.white.withValues(alpha: 0.40);
+  static Color whiteAlfa30 = Colors.white.withValues(alpha: 0.30);
+  static Color whiteAlfa20 = Colors.white.withValues(alpha: 0.20);
+  static Color whiteAlfa10 = Colors.white.withValues(alpha: 0.10);
 
   // --- PRIMARY #1 (HiGavi Blue) ---
   static const Color primary1_900 = Color(0xFF1E2F4D);

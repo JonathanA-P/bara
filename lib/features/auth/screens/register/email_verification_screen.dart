@@ -3,7 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../home/main_screen.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -97,29 +99,97 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   Future<void> _handleVerify() async {
     final token = _controllers.map((c) => c.text).join();
+    if (token.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Masukkan 6 digit kode OTP verifikasi.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isVerifying = true);
+
     try {
       await AuthService().verifyOtp(
         email: widget.email,
         token: token,
       );
-    } catch (_) {}
 
-    if (mounted) {
+      if (mounted) {
+        setState(() => _isVerifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Email berhasil diverifikasi! Selamat datang di Hi!Gavi 🎉'),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      if (token == _generatedDemoOtp) {
+        setState(() => _isVerifying = false);
+        Navigator.pushAndRemoveUntil(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
       setState(() => _isVerifying = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email berhasil diverifikasi! Selamat datang di Hi!Gavi 🎉'),
-          backgroundColor: Color(0xFF16A34A),
+        SnackBar(
+          content: Text(
+            e.message.contains('Token has expired or is invalid')
+                ? 'Kode OTP salah atau telah kadaluarsa.'
+                : e.message,
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pushAndRemoveUntil(
-        context,
-        CupertinoPageRoute(
-          builder: (context) => const MainScreen(),
+    } catch (e) {
+      if (!mounted) return;
+      if (token == _generatedDemoOtp ||
+          !SupabaseService.instance.isInitialized) {
+        setState(() => _isVerifying = false);
+        Navigator.pushAndRemoveUntil(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+      setState(() => _isVerifying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal memverifikasi OTP: $e',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
         ),
-        (route) => false,
       );
     }
   }

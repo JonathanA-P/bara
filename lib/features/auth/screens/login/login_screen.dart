@@ -52,7 +52,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().signIn(email: email, password: password);
+      final res = await AuthService().signIn(email: email, password: password);
+      if (res == null || res.user == null) {
+        throw const AuthException(
+          'Email kampus atau kata sandi salah. Jika belum punya akun, silakan klik Daftar.',
+        );
+      }
+
       await AppDataController.instance.loginWithCredentials(
         emailOrUsername: email,
       );
@@ -78,29 +84,30 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return;
       }
-      await AppDataController.instance.loginWithCredentials(
-        emailOrUsername: email,
-      );
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => const MainScreen(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message.contains('Invalid login credentials')
+                ? 'Email kampus atau kata sandi salah. Jika belum punya akun, silakan klik Daftar.'
+                : e.message,
+            style: GoogleFonts.manrope(fontSize: 12),
           ),
-        );
-      }
-    } catch (_) {
-      await AppDataController.instance.loginWithCredentials(
-        emailOrUsername: email,
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => const MainScreen(),
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal masuk: $e',
+            style: GoogleFonts.manrope(fontSize: 12),
           ),
-        );
-      }
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

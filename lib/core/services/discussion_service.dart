@@ -27,7 +27,7 @@ class DiscussionService {
 
     var query = client
         .from('discussions')
-        .select('*, profiles(id, full_name, email, major, avatar_url)');
+        .select('*, profiles!discussions_author_id_fkey(id, full_name, email, major, avatar_url)');
     if (tag != null && tag != 'Semua' && tag != 'For You') {
       query = query.eq('tag', tag);
     }
@@ -72,7 +72,7 @@ class DiscussionService {
           'tag': tag,
           'live_duration_minutes': liveDurationMinutes,
         })
-        .select('*, profiles(id, full_name, email, major, avatar_url)')
+        .select('*, profiles!discussions_author_id_fkey(id, full_name, email, major, avatar_url)')
         .single();
 
     return response;
@@ -168,7 +168,7 @@ class DiscussionService {
     try {
       final response = await client
           .from('bookmarks')
-          .select('discussion_id, discussions(*, profiles(full_name, major, avatar_url))')
+          .select('discussion_id, discussions(*, profiles!discussions_author_id_fkey(full_name, major, avatar_url))')
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
@@ -184,7 +184,7 @@ class DiscussionService {
 
     final response = await client
         .from('discussion_comments')
-        .select('*, profiles(id, full_name, major, avatar_url)')
+        .select('*, profiles!discussion_comments_author_id_fkey(id, full_name, major, avatar_url)')
         .eq('discussion_id', discussionId)
         .order('created_at', ascending: true);
 
@@ -208,7 +208,7 @@ class DiscussionService {
           'author_id': userId,
           'comment_text': commentText,
         })
-        .select('*, profiles(id, full_name, major, avatar_url)')
+        .select('*, profiles!discussion_comments_author_id_fkey(id, full_name, major, avatar_url)')
         .single();
 
     if (updatedRepliesCount != null) {

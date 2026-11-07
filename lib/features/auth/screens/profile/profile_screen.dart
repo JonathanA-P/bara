@@ -244,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: ListView.separated(
                           physics: const BouncingScrollPhysics(),
                           itemCount: list.length,
-                          separatorBuilder: (_, __) => const Divider(
+                          separatorBuilder: (_, _) => const Divider(
                             color: Color(0xFFF1F5F9),
                             height: 1,
                           ),

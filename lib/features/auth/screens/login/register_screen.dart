@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../home/main_screen.dart';
 import 'package:bara/core/services/auth_service.dart';
+import 'package:bara/features/auth/screens/home/main_screen.dart';
 import 'otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -77,7 +77,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        if (res?.session == null && res?.user != null) {
+        if (res?.session != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pendaftaran berhasil! Selamat datang di Hi!Gavi 🎉'),
+              backgroundColor: Color(0xFF16A34A),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+          );
+        } else {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -86,12 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 fullName: _nameController.text.trim(),
               ),
             ),
-          );
-        } else {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-            (route) => false,
           );
         }
       }
@@ -138,14 +145,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       }
-    } catch (_) {
-      // Ignored: Fallback seamlessly for tests or offline
+    } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-          (route) => false,
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal mendaftar: ${e.toString()}',
+              style: GoogleFonts.manrope(fontSize: 12),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }

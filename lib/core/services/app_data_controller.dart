@@ -938,8 +938,8 @@ class AppDataController extends ChangeNotifier {
       'isFailed': false,
       'isLiked': false,
       'isNew': true,
-      if (imagePath != null) 'imagePath': imagePath,
-      if (attachmentName != null) 'attachmentName': attachmentName,
+      'imagePath': ?imagePath,
+      'attachmentName': ?attachmentName,
     });
 
     final roomIdx = chatRooms.indexWhere(

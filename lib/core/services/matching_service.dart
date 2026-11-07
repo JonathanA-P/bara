@@ -37,7 +37,48 @@ class MatchingService {
     }
 
     final response = await query;
-    return List<Map<String, dynamic>>.from(response);
+    final liveList = List<Map<String, dynamic>>.from(response);
+    if (liveList.isNotEmpty) {
+      return liveList.map((m) {
+        final prof = m['profiles'] as Map<String, dynamic>?;
+        return {
+          'id': m['id'] ?? m['user_id'],
+          'user_id': m['user_id'],
+          'full_name': prof?['full_name'] ?? 'Mentor FILKOM',
+          'major': prof?['major'] ?? 'Teknik Informatika',
+          'rating': (m['rating'] as num?)?.toDouble() ?? 5.0,
+          'review_count': m['total_reviews'] ?? 0,
+          'hourly_rate': m['hourly_rate'] ?? 25000,
+          'skills': m['skills'] ?? ['Pemrograman Dasar', 'Struktur Data'],
+          'bio': prof?['bio'] ?? m['headline'] ?? '',
+        };
+      }).toList();
+    }
+
+    return [
+      {
+        'id': '1',
+        'full_name': 'Farhan Maulana',
+        'major': 'Teknik Informatika • Sem 7',
+        'rating': 4.9,
+        'review_count': 38,
+        'hourly_rate': 25000,
+        'skills': ['Algoritma Graf', 'Python', 'Competitive Programming'],
+        'bio':
+            'Asisten Lab Pemrograman Dasar & Struktur Data. Terbiasa membimbing konsep rekursi dan DP.',
+      },
+      {
+        'id': '2',
+        'full_name': 'Sarah Safitri',
+        'major': 'Sistem Informasi • Sem 5',
+        'rating': 4.85,
+        'review_count': 24,
+        'hourly_rate': 20000,
+        'skills': ['UI/UX Figma', 'Database SQL', 'Desain Produk'],
+        'bio':
+            'Juara 2 UI/UX Design Nasional. Suka sharing best practice Figma prototyping dan analisis kebutuhan.',
+      },
+    ];
   }
 
   Future<bool> swipeMentor({

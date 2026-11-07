@@ -26,54 +26,33 @@ class AuthService {
       return null;
     }
 
-    try {
-      await client.auth.admin.createUser(
-        AdminUserAttributes(
-          email: email,
-          password: password,
-          emailConfirm: true,
-          userMetadata: {
-            'full_name': fullName,
-            'nim': nim,
-            'major': major,
-            'role': role,
-          },
-        ),
-      );
-    } catch (_) {
-      try {
-        await client.auth.signUp(
-          email: email,
-          password: password,
-          data: {
-            'full_name': fullName,
-            'nim': nim,
-            'major': major,
-            'role': role,
-          },
-        );
-      } catch (_) {}
-    }
-
-    final authRes = await client.auth.signInWithPassword(
+    final res = await client.auth.signUp(
       email: email,
       password: password,
-    );
-
-    final uid = authRes.user?.id ?? _service.currentUserId;
-    if (uid != null) {
-      await client.from('profiles').upsert({
-        'id': uid,
-        'email': email,
+      data: {
         'full_name': fullName,
         'nim': nim,
         'major': major,
         'role': role,
-        'bio': 'Mahasiswa $major FILKOM Universitas Brawijaya',
-      });
+      },
+    );
+
+    final uid = res.user?.id ?? _service.currentUserId;
+    if (uid != null) {
+      try {
+        await client.from('profiles').upsert({
+          'id': uid,
+          'email': email,
+          'full_name': fullName,
+          'nim': nim,
+          'major': major,
+          'role': role,
+          'bio': 'Mahasiswa $major FILKOM Universitas Brawijaya',
+        });
+      } catch (_) {}
     }
 
-    return authRes;
+    return res;
   }
 
   Future<AuthResponse?> signIn({

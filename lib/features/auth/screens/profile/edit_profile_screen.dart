@@ -221,16 +221,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: ElevatedButton(
                             onPressed: isFilled
                                 ? () async {
+                                    final nav = Navigator.of(context);
                                     Navigator.pop(ctx);
                                     await _dataController.logoutUser();
-                                    if (!this.context.mounted) return;
-                                    Navigator.pushAndRemoveUntil(
-                                      this.context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const LoginScreen(),
-                                      ),
-                                      (route) => false,
-                                    );
+                                    if (mounted) {
+                                      nav.pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(

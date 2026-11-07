@@ -53,7 +53,7 @@ class SupabaseService {
       if (url.isNotEmpty && anonKey.isNotEmpty && url.startsWith('http')) {
         await Supabase.initialize(
           url: url,
-          anonKey: anonKey,
+          publishableKey: anonKey,
         );
         _isInitialized = true;
         debugPrint('[Hi!Gavi Supabase] Connected successfully to $url');

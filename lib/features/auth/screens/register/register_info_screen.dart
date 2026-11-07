@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/app_data_controller.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/supabase_service.dart';
+import '../home/main_screen.dart';
 import 'email_verification_screen.dart';
 
 /// Fase 4 - Account info (username, email, password, confirm password)
@@ -119,15 +122,66 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
         ctrl.pendingRegNim.isNotEmpty ? ctrl.pendingRegNim : '235150200111001';
     final major = ctrl.pendingRegProdi;
 
+    AuthResponse? authRes;
     try {
-      await AuthService().signUp(
+      authRes = await AuthService().signUp(
         email: email,
         password: password,
         fullName: fullName,
         nim: nim,
         major: major,
       );
-    } catch (_) {}
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      final msg = e.message.toLowerCase();
+      if (msg.contains('already registered') || msg.contains('already exists')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Email sudah terdaftar. Mengarahkan ke verifikasi OTP...',
+              style: GoogleFonts.manrope(fontSize: 12),
+            ),
+            backgroundColor: const Color(0xFF2D5F8A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => EmailVerificationScreen(email: email),
+          ),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message,
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    } catch (e) {
+      if (SupabaseService.instance.isInitialized) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal mendaftar: $e',
+              style: GoogleFonts.manrope(fontSize: 12),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
 
     await ctrl.registerNewAccount(
       fullName: fullName,
@@ -139,14 +193,29 @@ class _RegisterInfoScreenState extends State<RegisterInfoScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      Navigator.push(
-        context,
-        CupertinoPageRoute(
-          builder: (context) => EmailVerificationScreen(
-            email: email,
+      if (authRes?.session != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pendaftaran berhasil! Selamat datang di Hi!Gavi 🎉'),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
           ),
-        ),
-      );
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          CupertinoPageRoute(builder: (context) => const MainScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => EmailVerificationScreen(
+              email: email,
+            ),
+          ),
+        );
+      }
     }
   }
 

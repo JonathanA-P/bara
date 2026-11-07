@@ -378,47 +378,50 @@ class _CourseScreenState extends State<CourseScreen> {
                     style: TextStyle(fontSize: 12, color: AppColors.grey800),
                   ),
                   const SizedBox(height: 16),
-                  RadioListTile<String>(
-                    value: 'terbaik',
+                  RadioGroup<String>(
                     groupValue: selectedSort,
-                    activeColor: AppColors.primary1_500,
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Rating terbaik',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary2_900,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Tingkat kesulitan tertinggi lebih dulu',
-                      style: TextStyle(fontSize: 11, color: AppColors.grey800),
-                    ),
                     onChanged: (val) {
-                      setModalState(() => selectedSort = val!);
+                      if (val != null) setModalState(() => selectedSort = val);
                     },
-                  ),
-                  RadioListTile<String>(
-                    value: 'terburuk',
-                    groupValue: selectedSort,
-                    activeColor: AppColors.primary1_500,
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Rating terburuk',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary2_900,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        RadioListTile<String>(
+                          value: 'terbaik',
+                          activeColor: AppColors.primary1_500,
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Rating terbaik',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary2_900,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Tingkat kesulitan tertinggi lebih dulu',
+                            style: TextStyle(fontSize: 11, color: AppColors.grey800),
+                          ),
+                        ),
+                        RadioListTile<String>(
+                          value: 'terburuk',
+                          activeColor: AppColors.primary1_500,
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Rating terburuk',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary2_900,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Tingkat kesulitan terendah lebih dulu',
+                            style: TextStyle(fontSize: 11, color: AppColors.grey800),
+                          ),
+                        ),
+                      ],
                     ),
-                    subtitle: const Text(
-                      'Tingkat kesulitan terendah lebih dulu',
-                      style: TextStyle(fontSize: 11, color: AppColors.grey800),
-                    ),
-                    onChanged: (val) {
-                      setModalState(() => selectedSort = val!);
-                    },
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
