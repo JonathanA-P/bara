@@ -27,7 +27,7 @@ class EyeWidget extends StatelessWidget {
 
     return Transform(
       alignment: Alignment.center,
-      transform: mirror ? (Matrix4.identity()..scale(-1.0, 1.0)) : Matrix4.identity(),
+      transform: mirror ? (Matrix4.identity()..scaleByDouble(-1.0, 1.0, 1.0, 1.0)) : Matrix4.identity(),
       child: SizedBox(
         width: size,
         height: size,

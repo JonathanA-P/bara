@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../login/login_screen.dart';
-
 
 class OnboardingItem {
   final String title;
   final String description;
   final String imagePath;
+  final Color buttonColor;
+  final Color activeDotColor;
 
   OnboardingItem({
     required this.title,
     required this.description,
     required this.imagePath,
+    required this.buttonColor,
+    required this.activeDotColor,
   });
 }
 
@@ -29,22 +31,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingItem> _items = [
     OnboardingItem(
-      title: 'Find mentors who\nknow your path',
+      title: 'Temukan Teman\nBelajar Baru',
       description:
-          'Match with verified upper-year students, teaching assistants, and alumni who understand your courses and goals.',
+          'Kenali teman baru yang bisa diajak belajar, berdiskusi, dan saling membantu memahami materi kuliah.',
       imagePath: 'assets/images/CloudArt_margin.png',
+      buttonColor: const Color(0xFF5A7FBA),
+      activeDotColor: const Color(0xFF5A7FBA),
     ),
     OnboardingItem(
-      title: 'Learn with your\ncampus community',
+      title: 'Berbagi Informasi\nBersama Komunitas',
       description:
-          'Join study rooms, share notes, and collaborate with classmates before midterms, labs, and projects.',
+          'Bagikan catatan, bertukar informasi, dan diskusikan tugas bersama komunitas kampus untuk belajar lebih seru.',
       imagePath: 'assets/images/CloudArt_margin_1.png',
+      buttonColor: const Color(0xFF3882C7),
+      activeDotColor: const Color(0xFF3882C7),
     ),
     OnboardingItem(
-      title: 'Ask AI for your\nclasses',
+      title: 'Tanyakan Kapan dan\nDimana Saja',
       description:
-          'Get explanations, quizzes, summaries, and study roadmaps aligned to your syllabus and academic level.',
+          'Temukan jawaban atas pertanyaan kuliah, pahami materi, dan dapatkan rangkuman serta latihan soal kapan pun kamu butuh.',
       imagePath: 'assets/images/CloudArt_margin_2.png',
+      buttonColor: const Color(0xFF3882C7),
+      activeDotColor: const Color(0xFF3882C7),
     ),
   ];
 
@@ -61,9 +69,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _navigateToLogin() {
     Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const LoginScreen()),
-  );
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
@@ -74,24 +82,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color buttonBlue = Color(0xFF5382C1);
+    final currentItem = _items[_currentIndex];
+    final bool isLastPage = _currentIndex == _items.length - 1;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FF),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Column(
           children: [
+            // --- TOP BAR (LOGO + SKIP BUTTON) ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      SvgPicture.asset(
-                        'assets/images/logo.svg',
+                      Image.asset(
+                        'assets/images/logohigavi.png',
                         width: 36,
                         height: 36,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -100,26 +111,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           fontWeight: FontWeight.w800,
                           fontSize: 20,
                           color: const Color(0xFF1E293B),
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
                   ),
-                  TextButton(
-                    onPressed: _navigateToLogin,
-                    style: TextButton.styleFrom(
+                  InkWell(
+                    onTap: _navigateToLogin,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(color: Colors.grey.shade300),
+                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                       ),
-                    ),
-                    child: Text(
-                      'Skip',
-                      style: GoogleFonts.manrope(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                      child: Text(
+                        'Skip',
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                   ),
@@ -127,6 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
+            // --- PAGEVIEW (ILLUSTRATION, INDICATOR, TEXT) ---
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -141,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Center(
@@ -153,17 +167,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        // --- DOT INDICATORS ---
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
                           children: List.generate(_items.length, (dotIndex) {
                             final bool isActive = _currentIndex == dotIndex;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 250),
                               margin: const EdgeInsets.only(right: 6),
                               height: 6,
-                              width: isActive ? 28 : 6,
+                              width: isActive ? 26 : 6,
                               decoration: BoxDecoration(
-                                color: isActive ? buttonBlue : const Color(0xFFCBD5E1),
+                                color: isActive
+                                    ? item.activeDotColor
+                                    : const Color(0xFFCBD5E1),
                                 borderRadius: BorderRadius.circular(3),
                               ),
                             );
@@ -171,30 +187,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            item.title,
-                            style: GoogleFonts.manrope(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0F172A),
-                              height: 1.2,
-                            ),
+                        // --- TITLE ---
+                        Text(
+                          item.title,
+                          style: GoogleFonts.manrope(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                            height: 1.25,
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            item.description,
-                            style: GoogleFonts.manrope(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF64748B),
-                              height: 1.5,
-                            ),
+                        // --- DESCRIPTION ---
+                        Text(
+                          item.description,
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF64748B),
+                            height: 1.5,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -205,38 +217,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
+            // --- BOTTOM ACTION BUTTON ---
             Padding(
               padding: const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 28.0),
               child: SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: _onNext,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonBlue,
+                    backgroundColor: currentItem.buttonColor,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Continue',
-                        style: GoogleFonts.manrope(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ],
+                  child: Text(
+                    isLastPage ? 'Bergabung Sekarang' : 'Selanjutnya',
+                    style: GoogleFonts.manrope(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

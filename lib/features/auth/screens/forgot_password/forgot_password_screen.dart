@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/auth_service.dart';
 import 'check_email_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -11,11 +13,44 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  bool _isSending = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Masukkan email kampus terlebih dahulu.',
+            style: GoogleFonts.manrope(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSending = true);
+    try {
+      await AuthService().sendPasswordResetEmail(email);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _isSending = false);
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => CheckEmailScreen(email: email),
+        ),
+      );
+    }
   }
 
   @override
@@ -67,7 +102,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 child: Stack(
                   children: [
-                    Center(
+                    const Center(
                       child: Icon(
                         Icons.lock_outline,
                         color: primaryBlue,
@@ -80,8 +115,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: Container(
                         width: 18,
                         height: 18,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -146,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.email_outlined,
                       color: textMuted,
                       size: 20,
@@ -164,6 +199,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           isDense: true,
+                          hintText: 'nama@student.ub.ac.id',
+                          hintStyle: GoogleFonts.manrope(
+                            fontSize: 14,
+                            color: const Color(0xFFCBD5E1),
+                          ),
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -178,7 +218,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.info_outline,
                     size: 14,
                     color: textMuted,
@@ -186,7 +226,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Gunakan domain resmi kampus\nPastikan format email menggunakan alamat @student.ac.id atau @dosen.ac.id yang telah diverifikasi.',
+                      'Gunakan domain resmi kampus\nPastikan format email menggunakan alamat @student.ub.ac.id atau @ub.ac.id yang telah diverifikasi.',
                       style: GoogleFonts.manrope(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
@@ -204,18 +244,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CheckEmailScreen(
-                          email: _emailController.text.isNotEmpty
-                              ? _emailController.text
-                              : 'nina.puri@student.ac.id',
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: _isSending ? null : _handleResetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonBlue,
                     elevation: 0,
@@ -223,14 +252,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
-                    'Kirim Link Reset',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isSending
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          'Kirim Link Reset',
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -256,4 +294,3 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-
